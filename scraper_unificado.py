@@ -135,8 +135,16 @@ class BaseScraper:
                     # Tentar baixar este PDF
                     return self._download_specific_pdf(href, titulo)
                     
-            # Se não encontrou, procurar por texto que sugira PDF
-            text_elements = self.safe_find_elements(By.XPATH, '//*[contains(text(), "PDF") or contains(text(), "Download") or contains(text(), "Edital")]')
+            # Procurar especificamente por anexos (comum no CNPq)
+            anexo_links = self.safe_find_elements(By.XPATH, '//a[contains(text(), "Anexo") or contains(text(), "anexo")]')
+            for link in anexo_links:
+                href = self.safe_get_attribute(link, "href")
+                if href and href.startswith("http"):
+                    # Tentar baixar este anexo
+                    return self._download_specific_pdf(href, titulo)
+                    
+            # Procurar por texto que sugira PDF
+            text_elements = self.safe_find_elements(By.XPATH, '//*[contains(text(), "PDF") or contains(text(), "Download") or contains(text(), "Edital") or contains(text(), "Anexo")]')
             for element in text_elements:
                 parent = element.find_element(By.XPATH, "./..")
                 links = parent.find_elements(By.TAG_NAME, "a")
@@ -383,6 +391,9 @@ class UFMGScraper(BaseScraper):
                         if pdf_path:
                             pdf_info = self.extract_pdf_content(pdf_path)
                         
+                        # Extrair contexto da página
+                        contexto = self._extract_context_from_page(href)
+                        
                         edital = {
                             'titulo': titulo,
                             'url': href,
@@ -391,6 +402,7 @@ class UFMGScraper(BaseScraper):
                             'pdf_baixado': pdf_path,
                             'pdf_url': pdf_url,
                             'pdf_info': pdf_info,
+                            'contexto': contexto, # Adicionar contexto ao dicionário
                             'data_extracao': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         }
                         
@@ -429,6 +441,58 @@ class UFMGScraper(BaseScraper):
             pass
             
         return "Data não encontrada"
+        
+    def _extract_context_from_page(self, url: str) -> str:
+        """Extrai contexto/descrição da página do edital (NOVA FUNÇÃO)"""
+        try:
+            # Acessar a página para extrair contexto
+            self.driver.get(url)
+            self.random_delay(2, 3)
+            
+            # Estratégia 1: Procurar por parágrafos com texto descritivo
+            context_elements = self.safe_find_elements(By.XPATH, '//p[string-length(text()) > 100]')
+            
+            for element in context_elements:
+                texto = self.safe_get_text(element)
+                if texto and len(texto) > 100:
+                    # Verificar se parece ser uma descrição de edital
+                    if any(palavra in texto.lower() for palavra in ['objetivo', 'selecionar', 'propostas', 'apoio', 'desenvolvimento', 'científico', 'tecnológico', 'edital', 'chamada']):
+                        return texto[:500] + "..." if len(texto) > 500 else texto
+            
+            # Estratégia 2: Procurar por divs com texto longo
+            div_elements = self.safe_find_elements(By.XPATH, '//div[string-length(text()) > 150]')
+            for element in div_elements:
+                texto = self.safe_get_text(element)
+                if texto and len(texto) > 150:
+                    # Filtrar por conteúdo relevante
+                    if any(palavra in texto.lower() for palavra in ['edital', 'chamada', 'objetivo', 'selecionar', 'propostas']):
+                        return texto[:500] + "..." if len(texto) > 500 else texto
+            
+            # Estratégia 3: Procurar por elementos com classes específicas
+            class_selectors = [
+                '//div[contains(@class, "content")]',
+                '//div[contains(@class, "description")]',
+                '//div[contains(@class, "text")]',
+                '//section[contains(@class, "content")]',
+                '//article[contains(@class, "content")]'
+            ]
+            
+            for selector in class_selectors:
+                try:
+                    elements = self.safe_find_elements(By.XPATH, selector)
+                    for element in elements:
+                        texto = self.safe_get_text(element)
+                        if texto and len(texto) > 200:
+                            # Verificar se contém informações relevantes
+                            if any(palavra in texto.lower() for palavra in ['edital', 'chamada', 'objetivo', 'selecionar', 'propostas', 'apoio']):
+                                return texto[:500] + "..." if len(texto) > 500 else texto
+                except:
+                    continue
+                    
+        except Exception as e:
+            logger.warning(f"⚠️ Erro ao extrair contexto da página UFMG: {e}")
+            
+        return ""
         
     def _go_to_next_page(self) -> bool:
         """Tenta ir para a próxima página"""
@@ -598,6 +662,11 @@ class FAPEMIGScraper(BaseScraper):
             if valor_elements:
                 detalhes['valor'] = self.safe_get_text(valor_elements[0])
                 
+            # Procurar por descrição/contexto (NOVO - PRIORIDADE ALTA)
+            contexto = self._extract_context_from_page()
+            if contexto:
+                detalhes['contexto'] = contexto
+                
             # Procurar por datas
             data_elements = self.safe_find_elements(By.XPATH, '//*[contains(text(), "data") or contains(text(), "prazo") or contains(text(), "período")]')
             if data_elements:
@@ -607,6 +676,54 @@ class FAPEMIGScraper(BaseScraper):
             logger.warning(f"⚠️ Erro ao extrair detalhes FAPEMIG: {e}")
             
         return detalhes
+        
+    def _extract_context_from_page(self) -> str:
+        """Extrai contexto/descrição da página atual (NOVA FUNÇÃO)"""
+        try:
+            # Estratégia 1: Procurar por parágrafos com texto descritivo
+            context_elements = self.safe_find_elements(By.XPATH, '//p[string-length(text()) > 100]')
+            
+            for element in context_elements:
+                texto = self.safe_get_text(element)
+                if texto and len(texto) > 100:
+                    # Verificar se parece ser uma descrição de edital
+                    if any(palavra in texto.lower() for palavra in ['objetivo', 'selecionar', 'propostas', 'apoio', 'desenvolvimento', 'científico', 'tecnológico']):
+                        return texto[:500] + "..." if len(texto) > 500 else texto
+            
+            # Estratégia 2: Procurar por divs com texto longo
+            div_elements = self.safe_find_elements(By.XPATH, '//div[string-length(text()) > 150]')
+            for element in div_elements:
+                texto = self.safe_get_text(element)
+                if texto and len(texto) > 150:
+                    # Filtrar por conteúdo relevante
+                    if any(palavra in texto.lower() for palavra in ['chamada', 'pública', 'objetivo', 'selecionar', 'propostas']):
+                        return texto[:500] + "..." if len(texto) > 500 else texto
+            
+            # Estratégia 3: Procurar por elementos com classes específicas
+            class_selectors = [
+                '//div[contains(@class, "content")]',
+                '//div[contains(@class, "description")]',
+                '//div[contains(@class, "text")]',
+                '//section[contains(@class, "content")]',
+                '//article[contains(@class, "content")]'
+            ]
+            
+            for selector in class_selectors:
+                try:
+                    elements = self.safe_find_elements(By.XPATH, selector)
+                    for element in elements:
+                        texto = self.safe_get_text(element)
+                        if texto and len(texto) > 200:
+                            # Verificar se contém informações relevantes
+                            if any(palavra in texto.lower() for palavra in ['chamada', 'objetivo', 'selecionar', 'propostas', 'apoio']):
+                                return texto[:500] + "..." if len(texto) > 500 else texto
+                except:
+                    continue
+                    
+        except Exception as e:
+            logger.warning(f"⚠️ Erro ao extrair contexto da página: {e}")
+            
+        return ""
 
 class CNPqScraper(BaseScraper):
     """Scraper para CNPq - Chamadas Públicas"""
@@ -765,19 +882,34 @@ class CNPqScraper(BaseScraper):
                 href = self.safe_get_attribute(link, "href")
                 texto = self.safe_get_text(link)
                 
-                if href and ("chamada" in texto.lower() or "detalhes" in texto.lower() or "pdf" in texto.lower() or "saiba mais" in texto.lower()):
+                if href and href.startswith("http"):
+                    # Priorizar links que parecem ser PDFs ou editais
+                    if any(ext in href.lower() for ext in ['.pdf', '.doc', '.docx']):
+                        return href
+                    # Priorizar links "Chamada" que levam aos detalhes
+                    if "chamada" in texto.lower():
+                        return href
+                    if any(palavra in texto.lower() for palavra in ['detalhes', 'pdf', 'edital', 'saiba mais', 'inscrições', 'ver mais']):
+                        return href
+                    # Se não encontrou nada específico, retorna o primeiro link válido
                     return href
                     
             # Procurar por links nos siblings
             try:
                 siblings = titulo_element.find_elements(By.XPATH, "./following-sibling::*")
-                for sibling in siblings[:3]:  # Limitar a 3 siblings
+                for sibling in siblings[:5]:  # Aumentar para 5 siblings
                     links_sibling = sibling.find_elements(By.TAG_NAME, "a")
                     for link in links_sibling:
                         href = self.safe_get_attribute(link, "href")
                         texto = self.safe_get_text(link)
                         
-                        if href and href.startswith("http") and any(palavra in texto.lower() for palavra in ['chamada', 'detalhes', 'pdf', 'edital', 'saiba mais']):
+                        if href and href.startswith("http"):
+                            if any(ext in href.lower() for ext in ['.pdf', '.doc', '.docx']):
+                                return href
+                            if "chamada" in texto.lower():
+                                return href
+                            if any(palavra in texto.lower() for palavra in ['detalhes', 'pdf', 'edital', 'saiba mais', 'inscrições', 'ver mais']):
+                                return href
                             return href
             except:
                 pass
@@ -792,8 +924,15 @@ class CNPqScraper(BaseScraper):
                 href = self.safe_get_attribute(link, "href")
                 texto = self.safe_get_text(link)
                 
-                if href and href.startswith("http") and any(palavra in texto.lower() for palavra in ['chamada', 'detalhes', 'pdf', 'edital', 'saiba mais', 'inscrições']):
-                    return href
+                if href and href.startswith("http"):
+                    # Priorizar PDFs diretos
+                    if any(ext in href.lower() for ext in ['.pdf', '.doc', '.docx']):
+                        return href
+                    # Depois links relacionados
+                    if "chamada" in texto.lower():
+                        return href
+                    if any(palavra in texto.lower() for palavra in ['detalhes', 'pdf', 'edital', 'saiba mais', 'inscrições', 'ver mais']):
+                        return href
                     
         except:
             pass
@@ -832,6 +971,11 @@ class CNPqScraper(BaseScraper):
             if valor_elements:
                 detalhes['valor'] = self.safe_get_text(valor_elements[0])
                 
+            # Procurar por descrição/contexto (NOVO - PRIORIDADE ALTA)
+            contexto = self._extract_context_from_page()
+            if contexto:
+                detalhes['contexto'] = contexto
+                
             # Procurar por descrição
             desc_elements = self.safe_find_elements(By.XPATH, '//p[contains(text(), "Objetivo") or contains(text(), "Descrição")]')
             if desc_elements:
@@ -841,6 +985,54 @@ class CNPqScraper(BaseScraper):
             logger.warning(f"⚠️ Erro ao extrair detalhes CNPq: {e}")
             
         return detalhes
+        
+    def _extract_context_from_page(self) -> str:
+        """Extrai contexto/descrição da página atual (NOVA FUNÇÃO)"""
+        try:
+            # Estratégia 1: Procurar por parágrafos com texto descritivo
+            context_elements = self.safe_find_elements(By.XPATH, '//p[string-length(text()) > 100]')
+            
+            for element in context_elements:
+                texto = self.safe_get_text(element)
+                if texto and len(texto) > 100:
+                    # Verificar se parece ser uma descrição de chamada
+                    if any(palavra in texto.lower() for palavra in ['objetivo', 'selecionar', 'propostas', 'apoio', 'desenvolvimento', 'científico', 'tecnológico']):
+                        return texto[:500] + "..." if len(texto) > 500 else texto
+            
+            # Estratégia 2: Procurar por divs com texto longo
+            div_elements = self.safe_find_elements(By.XPATH, '//div[string-length(text()) > 150]')
+            for element in div_elements:
+                texto = self.safe_get_text(element)
+                if texto and len(texto) > 150:
+                    # Filtrar por conteúdo relevante
+                    if any(palavra in texto.lower() for palavra in ['chamada', 'pública', 'objetivo', 'selecionar', 'propostas']):
+                        return texto[:500] + "..." if len(texto) > 500 else texto
+            
+            # Estratégia 3: Procurar por elementos com classes específicas
+            class_selectors = [
+                '//div[contains(@class, "content")]',
+                '//div[contains(@class, "description")]',
+                '//div[contains(@class, "text")]',
+                '//section[contains(@class, "content")]',
+                '//article[contains(@class, "content")]'
+            ]
+            
+            for selector in class_selectors:
+                try:
+                    elements = self.safe_find_elements(By.XPATH, selector)
+                    for element in elements:
+                        texto = self.safe_get_text(element)
+                        if texto and len(texto) > 200:
+                            # Verificar se contém informações relevantes
+                            if any(palavra in texto.lower() for palavra in ['chamada', 'objetivo', 'selecionar', 'propostas', 'apoio']):
+                                return texto[:500] + "..." if len(texto) > 500 else texto
+                except:
+                    continue
+                    
+        except Exception as e:
+            logger.warning(f"⚠️ Erro ao extrair contexto da página: {e}")
+            
+        return ""
 
 class ScraperUnificado:
     """Classe principal que coordena todos os scrapers"""
@@ -1001,6 +1193,14 @@ PDFs: {pdfs_cnpq} baixados
                 formatted += f"   📅 Período: {edital['periodo_inscricao']}\n"
             if edital.get('valor'):
                 formatted += f"   💰 Valor: {edital['valor']}\n"
+                
+            # NOVO: Contexto extraído da página web (prioridade alta)
+            if edital.get('contexto'):
+                contexto = edital['contexto']
+                if len(contexto) > 120:
+                    formatted += f"   📋 Contexto: {contexto[:120]}... (📄 Texto completo disponível)\n"
+                else:
+                    formatted += f"   📋 Contexto: {contexto}\n"
                 
             # Informações extraídas do PDF
             if edital.get('pdf_info'):
