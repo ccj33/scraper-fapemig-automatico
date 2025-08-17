@@ -1,4 +1,4 @@
-name: 🚀 Scraper FAPEMIG Automático
+name: 🚀 Scraper Unificado - Editais e Chamadas
 
 on:
   schedule:
@@ -10,7 +10,7 @@ on:
 jobs:
   scraper:
     runs-on: ubuntu-latest
-    name: 🕷️ Executar Scraper FAPEMIG
+    name: 🕷️ Executar Scraper Unificado
     
     steps:
       - name: 📥 Checkout do código
@@ -32,20 +32,21 @@ jobs:
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
         run: python teste_github_actions.py
           
-      - name: 🚀 Executar scraper
+      - name: 🚀 Executar scraper unificado
         env:
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
-        run: python scraper.py
+        run: python scraper_unificado.py
         
       - name: 📁 Upload arquivos gerados
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: dados-scraper-${{ github.run_number }}
+          name: dados-scraper-unificado-${{ github.run_number }}
           path: |
-            chamadas_encontradas.json
-            pagina_fapemig.txt
+            resultados_completos.json
+            resumo_scraping.txt
+            scraper.log
           retention-days: 30
           
       - name: 📊 Resumo da execução
