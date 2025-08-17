@@ -15,8 +15,15 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
+import re
+import io
 import time
 import json
+import math
+import random
+import hashlib
+import logging
+import requests
 from datetime import datetime, timedelta
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -25,11 +32,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException, StaleElementReferenceException
 import chromedriver_autoinstaller
-import logging
 from typing import List, Dict, Optional, Tuple
-import random
-import requests
-import os
 import PyPDF2
 import fitz  # PyMuPDF
 
@@ -234,7 +237,6 @@ class BaseScraper:
         
     def _analyze_pdf_text(self, texto: str) -> Dict:
         """Analisa o texto extraído do PDF para encontrar informações importantes"""
-        import re
         
         info = {}
         
@@ -425,11 +427,10 @@ class UFMGScraper(BaseScraper):
             parent_text = self.safe_get_text(parent)
             
             # Procurar padrões de data
-            import re
             date_patterns = [
                 r'\d{2}/\d{2}/\d{4}',
                 r'\d{2}-\d{2}-\d{4}',
-                r'\d{2}\.\d{2}\.\d{4}'
+                r'\d{2}\.\d{2}\.\d{2}'
             ]
             
             for pattern in date_patterns:
