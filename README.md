@@ -1,14 +1,24 @@
-# 🚀 Scraper FAPEMIG Automatizado - GitHub Actions
+# 🚀 Scraper Simples - Editais e Chamadas
 
-Sistema automatizado para monitorar editais e chamadas da FAPEMIG usando GitHub Actions, executando diariamente e enviando notificações por email.
+Sistema automatizado para monitorar editais e chamadas da **FAPEMIG** e **CNPq** usando GitHub Actions, executando diariamente e coletando links de PDFs.
 
 ## ✨ Funcionalidades
 
 - 🤖 **Execução Automática**: Roda todo dia às 05:00 (horário de Brasília)
-- 🕷️ **Scraping Headless**: Funciona sem interface gráfica no GitHub
-- 📧 **Notificações por Email**: Envia resumo das oportunidades encontradas
-- 📁 **Artefatos**: Salva dados extraídos como arquivos para download
+- 🕷️ **Scraping Simples**: Coleta apenas links de PDFs e páginas de detalhes
+- 📁 **Artefatos**: Salva dados extraídos como arquivos JSON para download
 - 🔄 **Execução Manual**: Pode ser executado manualmente quando necessário
+- 🎯 **Foco nos Links**: Não baixa PDFs, apenas coleta os links
+
+## 🎯 Sites Monitorados
+
+### **FAPEMIG** (Fundação de Amparo à Pesquisa de Minas Gerais)
+- **URL**: http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/
+- **Foco**: Editais e chamadas de pesquisa em Minas Gerais
+
+### **CNPq** (Conselho Nacional de Desenvolvimento Científico e Tecnológico)
+- **URL**: https://www.gov.br/cnpq/pt-br/acesso-a-informacao/acoes-e-programas/programas/chamadas-publicas
+- **Foco**: Chamadas públicas nacionais de pesquisa
 
 ## 🛠️ Configuração
 
@@ -18,59 +28,43 @@ Sistema automatizado para monitorar editais e chamadas da FAPEMIG usando GitHub 
 # Clone este repositório ou crie um novo
 git init
 git add .
-git commit -m "🚀 Inicializar scraper FAPEMIG automatizado"
+git commit -m "🚀 Inicializar scraper simples de editais"
 git branch -M main
 git remote add origin https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
 git push -u origin main
 ```
 
-### 2. **Configurar Secrets no GitHub**
+### 2. **Dependências**
 
-No seu repositório GitHub, vá em:
-**Settings → Secrets and variables → Actions → New repository secret**
-
-#### **EMAIL_USER**
-- **Nome**: `EMAIL_USER`
-- **Valor**: Seu email Gmail (ex: `seuemail@gmail.com`)
-
-#### **EMAIL_PASS**
-- **Nome**: `EMAIL_PASS`
-- **Valor**: Senha de app do Gmail (NÃO sua senha normal!)
-
-### 3. **Como Gerar Senha de App do Gmail**
-
-1. Ative a **Verificação em duas etapas** na sua conta Google
-2. Vá em **Gerenciar sua Conta Google → Segurança**
-3. Em **Como você faz login no Google**, clique em **Senhas de app**
-4. Selecione **Email** e clique em **Gerar**
-5. Use essa senha gerada no campo `EMAIL_PASS`
+O sistema usa apenas:
+- **Selenium**: Para navegação web
+- **ChromeDriver**: Gerenciado automaticamente
 
 ## 🚀 Como Funciona
 
 ### **Execução Automática**
 - ⏰ **Agendamento**: Todo dia às 05:00 (horário de Brasília)
 - 🖥️ **Ambiente**: Ubuntu Linux limpo e atualizado
-- 🐍 **Python**: Versão 3.10 com todas as dependências
+- 🐍 **Python**: Versão 3.10 com dependências mínimas
 - 🌐 **Navegador**: Chrome em modo headless (sem interface)
 
 ### **Processo de Scraping**
-1. **Inicialização**: Configura ambiente e dependências
-2. **Navegação**: Acessa https://fapemig.br/chamadas/
-3. **Extração**: Busca por chamadas, editais e oportunidades
+1. **Inicialização**: Configura ambiente e navegador
+2. **FAPEMIG**: Acessa site e coleta links de editais/chamadas
+3. **CNPq**: Acessa site e coleta links de chamadas públicas
 4. **Processamento**: Organiza dados encontrados
-5. **Notificação**: Envia email com resumo
-6. **Artefatos**: Salva dados para download posterior
+5. **Artefatos**: Salva dados para download posterior
 
-### **Estratégias de Extração**
-- 🔍 **Links específicos**: Busca por elementos com "chamada" ou "edital"
-- 📋 **Elementos gerais**: Procura por cards, itens e classes comuns
-- 📄 **Texto completo**: Extrai conteúdo da página para análise
+### **Estratégia de Extração**
+- 🔍 **Links diretos**: Busca por links que terminem em `.pdf`
+- 📋 **Páginas de detalhes**: Coleta links para páginas com informações
+- 🎯 **Filtros inteligentes**: Identifica editais, chamadas e oportunidades
 
 ## 📊 Monitoramento
 
 ### **Verificar Execuções**
 1. Vá para a aba **Actions** do seu repositório
-2. Clique no workflow **🚀 Scraper FAPEMIG Automático**
+2. Clique no workflow **🚀 Scraper Simples - Editais e Chamadas**
 3. Veja o histórico de execuções e logs
 
 ### **Execução Manual**
@@ -81,97 +75,63 @@ No seu repositório GitHub, vá em:
 ### **Download de Artefatos**
 1. Após cada execução, clique na execução
 2. Role para baixo até **Artifacts**
-3. Baixe `dados-scraper-[número]` para ver os dados extraídos
+3. Baixe `oportunidades-scraper-[número]` para ver os dados extraídos
 
 ## 📁 Estrutura dos Arquivos
 
 ```
 meu-scraper/
-├── scraper.py              # Script principal do scraper
-├── requirements.txt         # Dependências Python
+├── scraper_simples.py        # Script principal do scraper
+├── requirements.txt           # Dependências Python (mínimas)
 ├── .github/
 │   └── workflows/
-│       └── scraper.yml     # Configuração do GitHub Actions
-└── README.md               # Este arquivo
+│       └── scraper.yml       # Configuração do GitHub Actions
+└── README.md                  # Este arquivo
+```
+
+## 📋 Formato dos Dados
+
+### **Arquivo JSON de Saída**
+```json
+{
+  "fapemig": [
+    {
+      "titulo": "Nome da Oportunidade",
+      "link_pdf": "http://exemplo.com/edital.pdf",
+      "fonte": "FAPEMIG",
+      "data_coleta": "2024-01-01T10:00:00"
+    }
+  ],
+  "cnpq": [
+    {
+      "titulo": "Chamada Pública",
+      "link_detalhes": "http://exemplo.com/chamada",
+      "fonte": "CNPq",
+      "data_coleta": "2024-01-01T10:00:00"
+    }
+  ],
+  "timestamp": "2024-01-01T10:00:00"
+}
 ```
 
 ## 🔧 Personalização
+
+### **Adicionar Novos Sites**
+Edite `scraper_simples.py` e adicione novos métodos de extração seguindo o padrão existente.
 
 ### **Alterar Horário de Execução**
 Edite `.github/workflows/scraper.yml`:
 ```yaml
 schedule:
-  - cron: "0 8 * * *"   # 08:00 UTC = 05:00 BRT
+  - cron: "0 8 * * *"   # Formato: minuto hora dia mês dia_semana
 ```
 
-### **Modificar URL de Scraping**
-Edite `scraper.py`:
-```python
-url_fapemig = "https://fapemig.br/chamadas/"
-```
+## 🚨 Limitações
 
-### **Ajustar Estratégias de Extração**
-Modifique as funções de busca em `scraper.py` para adaptar ao site específico.
+- **Não baixa PDFs**: Apenas coleta links
+- **Dependência do Selenium**: Requer Chrome/Chromium
+- **Sites podem mudar**: Estrutura dos sites pode alterar
 
-## 🚨 Troubleshooting
+## 📝 Licença
 
-### **Erro: "Chrome não inicia"**
-- ✅ Normal no GitHub Actions - o modo headless funciona sem problemas
-- ⚠️ Se testar localmente, pode precisar do Chrome instalado
-
-### **Erro: "Email não enviado"**
-- ✅ Verifique se os secrets `EMAIL_USER` e `EMAIL_PASS` estão configurados
-- ✅ Confirme se a verificação em duas etapas está ativada no Gmail
-- ✅ Use senha de app, não senha normal da conta
-
-### **Nenhuma chamada encontrada**
-- 🔍 Verifique se a URL ainda está válida
-- 🔍 O site pode ter mudado sua estrutura
-- 🔍 Ajuste as estratégias de extração no código
-
-### **Execução muito lenta**
-- ⏱️ Normal na primeira execução (download de dependências)
-- ⏱️ Execuções subsequentes são mais rápidas
-- ⏱️ O GitHub Actions tem limites de tempo (6 horas por job)
-
-## 📈 Logs e Debug
-
-### **Ver Logs Completos**
-1. Vá para **Actions → [Execução específica]**
-2. Clique em **🚀 Executar scraper**
-3. Veja todos os logs de execução
-
-### **Arquivos de Debug**
-- `chamadas_encontradas.json`: Dados extraídos em formato estruturado
-- `pagina_fapemig.txt`: Texto completo da página para análise
-
-## 🔒 Segurança
-
-- 🔐 **Secrets**: Credenciais ficam protegidas no GitHub
-- 🌐 **HTTPS**: Todas as conexões são seguras
-- 🚫 **Sem exposição**: Dados sensíveis não aparecem nos logs
-- 📧 **Email próprio**: Notificações vão apenas para você
-
-## 🎯 Próximos Passos
-
-1. ✅ **Configure os secrets** no GitHub
-2. ✅ **Faça push** do código
-3. ✅ **Verifique a primeira execução** automática
-4. ✅ **Teste execução manual** se necessário
-5. ✅ **Monitore** as execuções diárias
-6. ✅ **Ajuste** estratégias de extração conforme necessário
-
-## 📞 Suporte
-
-- 📖 **Documentação**: Este README
-- 🐛 **Issues**: Use a aba Issues do GitHub para reportar problemas
-- 🔄 **Updates**: Mantenha o repositório atualizado
-
----
-
-**🎉 Seu scraper FAPEMIG está pronto para rodar automaticamente no GitHub!**
-
-**⏰ Execução**: Todo dia às 05:00 (BRT)  
-**📧 Notificações**: Automáticas por email  
-**🤖 Automação**: Totalmente hands-free  
-**📊 Dados**: Salvos como artefatos para download
+Este projeto é de uso livre para fins educacionais e de pesquisa.
