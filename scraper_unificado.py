@@ -23,7 +23,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException, StaleElementReferenceException
 import chromedriver_autoinstaller
 import logging
 from typing import List, Dict, Optional, Tuple
@@ -726,32 +726,64 @@ class FAPEMIGScraper(BaseScraper):
         return ""
 
 class CNPqScraper(BaseScraper):
-    """Scraper para CNPq - Chamadas Públicas"""
+    """Scraper para CNPq - Chamadas Públicas - VERSÃO MELHORADA"""
     
+    # Mapeamento para casefold em XPath, incluindo acentos mais comuns
+    LOWER = ('translate(normalize-space(string(.)),'
+             '"ÁÀÂÃÄÅÇÉÈÊËÍÌÎÏÑÓÒÔÕÖÚÙÛÜÝŶABCDEFGHIJKLMNOPQRSTUVWXYZ",'
+             '"aaaaaaceeeeiiiinooooouuuuyyabcdefghijklmnopqrstuvwxyz")')
+
+    # Palavras-chave para título e URL
+    KW_TITULO = ("chamada", "edital", "seleção", "selecoes", "bolsa", "bolsas", "fomento")
+    KW_URL = ("chamada", "chamadas", "edital", "editais")
+
+    # Regex de datas comuns
+    REGEX_DATAS = [
+        re.compile(r'(\d{1,2}/\d{1,2}/\d{2,4})\s*(?:a|até|-|–|—)\s*(\d{1,2}/\d{1,2}/\d{2,4})', re.I),
+        re.compile(r'(\d{1,2}\s+de\s+\w+\s+de\s+\d{4}).{0,30}?(?:a|até|-|–|—).{0,30}?(\d{1,2}\s+de\s+\w+\s+de\s+\d{4})', re.I),
+        re.compile(r'(?:prazo|inscriç(?:ão|oes)|submiss(?:ão|ões)).{0,40}?(?:até|encerra(?:m)? em)\s+(\d{1,2}/\d{1,2}/\d{2,4})', re.I),
+        re.compile(r'(?:prazo|inscriç(?:ão|oes)|submiss(?:ão|ões)).{0,40}?(?:até|encerra(?:m)? em)\s+(\d{1,2}\s+de\s+\w+\s+de\s+\d{4})', re.I),
+    ]
+
+    MESES_PT_EN = {
+        "janeiro":"january","fevereiro":"february","março":"march","marco":"march","abril":"april",
+        "maio":"may","junho":"june","julho":"july","agosto":"august","setembro":"september",
+        "outubro":"october","novembro":"november","dezembro":"december"
+    }
+
     def __init__(self, driver: webdriver.Chrome):
-        super().__init__(self.driver)
+        super().__init__(driver)
+        self._seen = set()
+        self._session = requests.Session()
+        self._session.headers.update({
+            "User-Agent": "Mozilla/5.0 (compatible; CNPqScraper/1.0; +https://cnpq.br)"
+        })
+        # pasta padrão para PDFs se sua base não definir
+        self._pdf_dir = getattr(self, "pdf_dir", os.path.join(os.getcwd(), "pdfs_baixados"))
+        os.makedirs(self._pdf_dir, exist_ok=True)
+        
+    def extract_chamadas(self) -> List[Dict]:
+        """Extrai chamadas do CNPq usando o novo sistema robusto"""
+        logger.info("🚀 Iniciando extração CNPq com sistema robusto...")
+        
         # URLs atualizadas do CNPq
-        self.base_urls = [
+        base_urls = [
             "https://www.gov.br/cnpq/pt-br/acesso-a-informacao/acoes-e-programas/programas/chamadas-publicas",
             "https://www.gov.br/cnpq/pt-br/acesso-a-informacao/acoes-e-programas/programas",
             "http://memoria2.cnpq.br/web/guest/chamadas-publicas"  # Fallback
         ]
         
-    def extract_chamadas(self) -> List[Dict]:
-        """Extrai chamadas do CNPq"""
-        logger.info("🚀 Iniciando extração CNPq...")
-        
         chamadas = []
         
         # Tentar múltiplas URLs até encontrar chamadas
-        for base_url in self.base_urls:
+        for base_url in base_urls:
             try:
                 logger.info(f"🔍 Tentando URL: {base_url}")
                 self.driver.get(base_url)
                 self.random_delay(3, 5)
                 
                 # Extrair chamadas da página atual
-                page_chamadas = self._extract_page_chamadas()
+                page_chamadas = self.extract_cnpq_chamadas()
                 if page_chamadas:
                     chamadas.extend(page_chamadas)
                     logger.info(f"✅ Encontradas {len(page_chamadas)} chamadas em {base_url}")
@@ -771,173 +803,385 @@ class CNPqScraper(BaseScraper):
             logger.warning("⚠️ Nenhuma chamada encontrada em nenhuma URL do CNPq")
             
         return chamadas
-            
-    def _extract_page_chamadas(self) -> List[Dict]:
-        """Extrai chamadas da página principal"""
-        chamadas = []
         
-        try:
-            # Procurar por diferentes tipos de elementos que podem conter chamadas
-            selectors = [
-                '//h4[contains(text(), "CHAMADA") or contains(text(), "Chamada")]',
-                '//h3[contains(text(), "CHAMADA") or contains(text(), "Chamada")]',
-                '//h2[contains(text(), "CHAMADA") or contains(text(), "Chamada")]',
-                '//h1[contains(text(), "CHAMADA") or contains(text(), "Chamada")]',
-                '//div[contains(@class, "chamada") or contains(@class, "edital")]',
-                '//li[contains(text(), "CHAMADA") or contains(text(), "Chamada")]',
-                '//a[contains(text(), "CHAMADA") or contains(text(), "Chamada")]'
-            ]
-            
-            titulos_encontrados = set()  # Para evitar duplicatas
-            
-            for selector in selectors:
-                try:
-                    elementos = self.safe_find_elements(By.XPATH, selector)
-                    
-                    for elemento in elementos:
-                        try:
-                            texto = self.safe_get_text(elemento)
-                            
-                            if texto and texto not in titulos_encontrados:
-                                # Verificar se parece ser uma chamada válida
-                                if any(palavra in texto.lower() for palavra in ['chamada', 'edital', 'programa', 'bolsa']):
-                                    titulos_encontrados.add(texto)
-                                    
-                                    # Procurar período de inscrição
-                                    periodo = self._find_periodo_near_title(elemento)
-                                    
-                                    # Procurar link para detalhes
-                                    link_detalhes = self._find_link_detalhes_near_title(elemento)
-                                    
-                                    # Tentar baixar PDF se for um link de PDF
-                                    pdf_result = self.download_pdf_if_available(link_detalhes, texto)
-                                    pdf_path, pdf_url = pdf_result if isinstance(pdf_result, tuple) else (pdf_result, "")
-                                    
-                                    # Se PDF foi baixado, extrair conteúdo detalhado
-                                    pdf_info = {}
-                                    if pdf_path:
-                                        pdf_info = self.extract_pdf_content(pdf_path)
-                                    
-                                    chamada = {
-                                        'titulo': texto,
-                                        'periodo_inscricao': periodo,
-                                        'url_detalhes': link_detalhes,
-                                        'fonte': 'CNPq',
-                                        'pdf_baixado': pdf_path,
-                                        'pdf_url': pdf_url,
-                                        'pdf_info': pdf_info,
-                                        'data_extracao': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                                    }
-                                    
-                                    chamadas.append(chamada)
-                                    logger.info(f"✅ Chamada CNPq encontrada: {texto[:50]}...")
-                                    
-                        except Exception as e:
-                            logger.warning(f"⚠️ Erro ao processar elemento CNPq: {e}")
-                            continue
-                            
-                except Exception as e:
-                    logger.warning(f"⚠️ Erro ao usar selector {selector}: {e}")
-                    continue
-                    
-        except Exception as e:
-            logger.error(f"❌ Erro ao extrair página CNPq: {e}")
-            
-        logger.info(f"📊 Total de chamadas CNPq encontradas: {len(chamadas)}")
-        return chamadas
-        
-    def _find_periodo_near_title(self, titulo_element) -> str:
-        """Encontra período de inscrição próximo ao título"""
-        try:
-            # Procurar por texto com período próximo ao título
-            parent = titulo_element.find_element(By.XPATH, "./..")
-            parent_text = self.safe_get_text(parent)
-            
-            # Procurar padrões de período
-            import re
-            periodo_patterns = [
-                r'Inscrições:\s*\d{2}/\d{2}/\d{4}\s*a\s*\d{2}/\d{2}/\d{4}',
-                r'Período:\s*\d{2}/\d{2}/\d{4}\s*a\s*\d{2}/\d{2}/\d{4}',
-                r'\d{2}/\d{2}/\d{4}\s*a\s*\d{2}/\d{2}/\d{4}'
-            ]
-            
-            for pattern in periodo_patterns:
-                match = re.search(pattern, parent_text)
-                if match:
-                    return match.group()
-                    
-        except:
-            pass
-            
-        return "Período não encontrado"
-        
-    def _find_link_detalhes_near_title(self, titulo_element) -> str:
-        """Encontra link para detalhes próximo ao título"""
-        try:
-            # Procurar por link próximo ao título (parent e siblings)
-            parent = titulo_element.find_element(By.XPATH, "./..")
-            links = parent.find_elements(By.TAG_NAME, "a")
-            
-            for link in links:
-                href = self.safe_get_attribute(link, "href")
-                texto = self.safe_get_text(link)
-                
-                if href and href.startswith("http"):
-                    # Priorizar links que parecem ser PDFs ou editais
-                    if any(ext in href.lower() for ext in ['.pdf', '.doc', '.docx']):
-                        return href
-                    # Priorizar links "Chamada" que levam aos detalhes
-                    if "chamada" in texto.lower():
-                        return href
-                    if any(palavra in texto.lower() for palavra in ['detalhes', 'pdf', 'edital', 'saiba mais', 'inscrições', 'ver mais']):
-                        return href
-                    # Se não encontrou nada específico, retorna o primeiro link válido
-                    return href
-                    
-            # Procurar por links nos siblings
+    # --------- Utils ---------
+    @staticmethod
+    def _norm(s: str) -> str:
+        return ' '.join((s or '').split()).strip().lower()
+
+    @staticmethod
+    def _canon(url: str) -> str:
+        if not url:
+            return ""
+        u = url.strip()
+        q = u.split('#')[0]
+        q = q.split('?')[0]
+        return q
+
+    @staticmethod
+    def _safe_hash(s: str) -> str:
+        import hashlib
+        return hashlib.md5((s or '').encode('utf-8')).hexdigest()
+
+    def _key(self, title: str, url: str) -> str:
+        return f"{self._safe_hash(self._norm(title))}|{self._canon(url)}"
+
+    def _translate_href_xpath(self, attr="href") -> str:
+        return f'translate(@{attr},"ABCDEFGHIJKLMNOPQRSTUVWXYZ","abcdefghijklmnopqrstuvwxyz")'
+
+    # --------- Datas ---------
+    def _pt_to_iso(self, s: str) -> str | None:
+        if not s:
+            return None
+        txt = self._norm(s)
+        # dd/mm/yyyy
+        m = re.match(r'(\d{1,2})/(\d{1,2})/(\d{2,4})', txt)
+        if m:
+            d, M, y = map(int, m.groups())
+            y = 2000 + y if y < 100 else y
             try:
-                siblings = titulo_element.find_elements(By.XPATH, "./following-sibling::*")
-                for sibling in siblings[:5]:  # Aumentar para 5 siblings
-                    links_sibling = sibling.find_elements(By.TAG_NAME, "a")
-                    for link in links_sibling:
-                        href = self.safe_get_attribute(link, "href")
-                        texto = self.safe_get_text(link)
-                        
-                        if href and href.startswith("http"):
-                            if any(ext in href.lower() for ext in ['.pdf', '.doc', '.docx']):
-                                return href
-                            if "chamada" in texto.lower():
-                                return href
-                            if any(palavra in texto.lower() for palavra in ['detalhes', 'pdf', 'edital', 'saiba mais', 'inscrições', 'ver mais']):
-                                return href
-                            return href
-            except:
-                pass
-                    
-        except:
-            pass
-            
-        # Se não encontrou no parent, procurar em toda a página
+                return datetime(y, M, d).date().isoformat()
+            except ValueError:
+                return None
+        # d de mês de yyyy
+        m2 = re.match(r'(\d{1,2})\s+de\s+([a-zç]+)\s+de\s+(\d{4})', txt)
+        if m2:
+            d = int(m2.group(1))
+            mes = m2.group(2)
+            y = int(m2.group(3))
+            mes_en = self.MESES_PT_EN.get(mes, None)
+            if mes_en:
+                try:
+                    # map to month index
+                    M = datetime.strptime(mes_en[:3], "%b").month
+                    return datetime(y, M, d).date().isoformat()
+                except ValueError:
+                    return None
+        return None
+
+    def _extract_periodo(self, blob: str) -> dict | None:
+        if not blob:
+            return None
+        for rx in self.REGEX_DATAS:
+            m = rx.search(blob)
+            if not m:
+                continue
+            if m.lastindex == 2:
+                ini = self._pt_to_iso(m.group(1))
+                fim = self._pt_to_iso(m.group(2))
+                if ini or fim:
+                    return {"inicio": ini, "fim": fim}
+            elif m.lastindex == 1:
+                fim = self._pt_to_iso(m.group(1))
+                if fim:
+                    return {"inicio": None, "fim": fim}
+        return None
+
+    # --------- Heurística ---------
+    def _score(self, titulo: str, href: str | None, contexto: str | None, periodo: dict | None) -> int:
+        s = 0
+        t = self._norm(titulo)
+        for kw in self.KW_TITULO:
+            if kw in t:
+                s += 1
+        h = self._norm(href or "")
+        if any(k in h for k in self.KW_URL):
+            s += 1
+        if periodo:
+            s += 1
+        if contexto:
+            c = self._norm(contexto)
+            if any(k in c for k in self.KW_TITULO):
+                s += 1
+        return s
+
+    # --------- PDFs ---------
+    def download_pdf_if_available(self, href: str, titulo: str):
+        """Compatível com sua interface anterior. Retorna (pdf_path, pdf_url) ou ("", url)."""
+        if not href:
+            return ("", "")
+        url = self._canon(href)
         try:
-            links_globais = self.driver.find_elements(By.TAG_NAME, "a")
-            for link in links_globais:
-                href = self.safe_get_attribute(link, "href")
-                texto = self.safe_get_text(link)
-                
+            head = self._session.head(url, allow_redirects=True, timeout=15)
+            ctype = (head.headers.get("Content-Type") or "").lower()
+            clen = head.headers.get("Content-Length")
+            clen = int(clen) if clen and clen.isdigit() else None
+        except Exception as e:
+            logger.debug(f"HEAD falhou, prosseguindo por extensão: {e}")
+            ctype = ""
+            clen = None
+
+        is_pdf = url.lower().endswith(".pdf") or "application/pdf" in ctype
+        if not is_pdf:
+            return ("", url)
+
+        # limite opcional de tamanho, p.ex. 35MB
+        if clen and clen > 35 * 1024 * 1024:
+            logger.info(f"PDF muito grande, ignorado: {clen} bytes")
+            return ("", url)
+
+        safe_name = re.sub(r'[^a-z0-9._-]+', '_', self._norm(titulo))[:80] or "chamada"
+        fpath = os.path.join(self._pdf_dir, f"{safe_name}.pdf")
+
+        try:
+            with self._session.get(url, stream=True, timeout=60) as r:
+                r.raise_for_status()
+                with open(fpath, "wb") as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+            return (fpath, url)
+        except Exception as e:
+            logger.warning(f"Falha ao baixar PDF: {e}")
+            return ("", url)
+
+    # --------- Busca de link próximo ---------
+    def _find_link_detalhes_near_title(self, titulo_element) -> str:
+        # 1) container mais próximo plausível
+        containers = [
+            'ancestor::section[1]', 'ancestor::article[1]', 'ancestor::div[1]'
+        ]
+        for c in containers:
+            try:
+                container = titulo_element.find_element(By.XPATH, c)
+                href = container.find_element(
+                    By.XPATH,
+                    f'.//a[@href and (contains({self.LOWER}, "chamada") or contains({self.LOWER}, "edital"))]'
+                ).get_attribute("href")
                 if href and href.startswith("http"):
-                    # Priorizar PDFs diretos
-                    if any(ext in href.lower() for ext in ['.pdf', '.doc', '.docx']):
-                        return href
-                    # Depois links relacionados
-                    if "chamada" in texto.lower():
-                        return href
-                    if any(palavra in texto.lower() for palavra in ['detalhes', 'pdf', 'edital', 'saiba mais', 'inscrições', 'ver mais']):
-                        return href
-                    
-        except:
+                    return href
+            except Exception:
+                pass
+        # 2) primeiro link visível após o título
+        try:
+            href = titulo_element.find_element(By.XPATH, 'following::a[@href][1]').get_attribute("href")
+            if href and href.startswith("http"):
+                return href
+        except Exception:
             pass
-            
+        # 3) global por href contendo palavra-chave
+        try:
+            links = self.safe_find_elements(
+                By.XPATH,
+                f'//a[@href and (contains({self._translate_href_xpath()},"chamada") or contains({self._translate_href_xpath()},"edital"))]'
+            )
+            for lk in links:
+                h = self.safe_get_attribute(lk, "href")
+                if h and h.startswith("http"):
+                    return h
+        except Exception:
+            pass
         return ""
+
+    # --------- Período próximo ao título ---------
+    def _find_periodo_near_title(self, titulo_element) -> dict | None:
+        blobs = []
+        x_local = [
+            '.',  # próprio título
+            'following-sibling::*[position()<=3]',
+            'ancestor::section[1]',
+            'ancestor::div[1]',
+        ]
+        for xp in x_local:
+            try:
+                if xp == '.':
+                    blobs.append(self.safe_get_text(titulo_element))
+                else:
+                    nodes = titulo_element.find_elements(By.XPATH, xp)
+                    txt = ' '.join(self.safe_get_text(n) for n in nodes if n)
+                    blobs.append(txt)
+            except Exception:
+                continue
+
+        # concatena e tenta regex
+        for blob in blobs:
+            per = self._extract_periodo(blob)
+            if per:
+                return per
+        return None
+        
+    def extract_cnpq_chamadas(self) -> List[Dict]:
+        """Extrai chamadas do CNPq usando o novo sistema robusto"""
+        chamadas = []
+        seen = self._seen
+
+        # XPath amplo porém controlado
+        X_TITULOS = (
+            f'//*[self::h1 or self::h2 or self::h3 or self::h4 or self::a]'
+            f'[contains({self.LOWER}, "chamada") or contains({self.LOWER}, "edital") or '
+            f' contains({self.LOWER}, "seleção") or contains({self.LOWER}, "bolsas")]'
+        )
+
+        wait = WebDriverWait(self.driver, 15)
+        try:
+            wait.until(EC.visibility_of_any_elements_located((By.XPATH, X_TITULOS)))
+        except TimeoutException:
+            logger.info("Nenhum título visível no tempo limite")
+            return chamadas
+
+        # Estratégia 1: títulos relevantes
+        titulos = self.safe_find_elements(By.XPATH, X_TITULOS)
+        MAX_ITEMS = 50
+        count = 0
+
+        for el in titulos:
+            if count >= MAX_ITEMS:
+                break
+            try:
+                texto = self._norm(self.safe_get_text(el))
+                if len(texto) < 12:
+                    continue
+
+                link_detalhes = self._find_link_detalhes_near_title(el)
+                periodo = self._find_periodo_near_title(el)
+                k = self._key(texto, link_detalhes)
+                if k in seen:
+                    continue
+
+                score = self._score(texto, link_detalhes, None, periodo)
+                if score < 2:
+                    continue  # filtra ruído
+
+                # PDF
+                pdf_path, pdf_url = self.download_pdf_if_available(link_detalhes, texto)
+                pdf_info = {}
+                if pdf_path:
+                    try:
+                        pdf_info = self.extract_pdf_content(pdf_path)  # usa seu extrator existente
+                        # tenta extrair período também do PDF
+                        if not periodo:
+                            periodo = self._extract_periodo(json.dumps(pdf_info, ensure_ascii=False))
+                    except Exception as e:
+                        logger.warning(f"Falha ao extrair PDF: {e}")
+
+                chamadas.append({
+                    "titulo": texto,
+                    "periodo_inscricao": periodo,
+                    "url_detalhes": link_detalhes,
+                    "fonte": "CNPq",
+                    "pdf_baixado": pdf_path,
+                    "pdf_url": pdf_url,
+                    "pdf_info": pdf_info,
+                    "data_extracao": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                })
+                seen.add(k)
+                count += 1
+                logger.info(f"✅ Chamada CNPq: {texto[:80]}...")
+                time.sleep(random.uniform(0.2, 0.6))
+            except (StaleElementReferenceException, NoSuchElementException):
+                continue
+            except Exception as e:
+                logger.warning(f"Falha ao processar título: {e}")
+                continue
+
+        if chamadas:
+            return chamadas
+
+        # Estratégia 2: links com href contendo palavras-chave
+        try:
+            links_ch = self.safe_find_elements(
+                By.XPATH,
+                f'//a[@href and (contains({self._translate_href_xpath()},"/chamada") or '
+                f'contains({self._translate_href_xpath()},"/editais") or '
+                f'contains({self._translate_href_xpath()},"/edital"))]'
+            )
+        except Exception:
+            links_ch = []
+
+        for lk in links_ch[:MAX_ITEMS]:
+            try:
+                href = self.safe_get_attribute(lk, "href")
+                texto = self._norm(self.safe_get_text(lk))
+                if not href:
+                    continue
+                k = self._key(texto or href, href)
+                if k in seen:
+                    continue
+
+                periodo = self._find_periodo_near_title(lk)
+                score = self._score(texto or href, href, None, periodo)
+                if score < 2:
+                    continue
+
+                pdf_path, pdf_url = self.download_pdf_if_available(href, texto or "chamada")
+                pdf_info = {}
+                if pdf_path:
+                    try:
+                        pdf_info = self.extract_pdf_content(pdf_path)
+                        if not periodo:
+                            periodo = self._extract_periodo(json.dumps(pdf_info, ensure_ascii=False))
+                    except Exception as e:
+                        logger.warning(f"Falha ao extrair PDF: {e}")
+
+                chamadas.append({
+                    "titulo": texto or href,
+                    "periodo_inscricao": periodo,
+                    "url_detalhes": href,
+                    "fonte": "CNPq",
+                    "pdf_baixado": pdf_path,
+                    "pdf_url": pdf_url,
+                    "pdf_info": pdf_info,
+                    "data_extracao": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                })
+                seen.add(k)
+                logger.info(f"✅ Chamada CNPq (href): {(texto or href)[:80]}...")
+                time.sleep(random.uniform(0.2, 0.6))
+            except Exception:
+                continue
+
+        if chamadas:
+            return chamadas
+
+        # Estratégia 3: fallback global por qualquer elemento com "chamada"
+        try:
+            all_elements = self.safe_find_elements(
+                By.XPATH, f'//*[contains({self.LOWER}, "chamada") or contains({self.LOWER}, "edital")]'
+            )
+        except Exception:
+            all_elements = []
+
+        for el in all_elements[:MAX_ITEMS]:
+            try:
+                texto = self._norm(self.safe_get_text(el))
+                if len(texto) < 12:
+                    continue
+                href = self._find_link_detalhes_near_title(el)
+                periodo = self._find_periodo_near_title(el)
+                k = self._key(texto, href)
+                if k in seen:
+                    continue
+
+                score = self._score(texto, href, texto, periodo)
+                if score < 2:
+                    continue
+
+                pdf_path, pdf_url = self.download_pdf_if_available(href, texto)
+                pdf_info = {}
+                if pdf_path:
+                    try:
+                        pdf_info = self.extract_pdf_content(pdf_path)
+                        if not periodo:
+                            periodo = self._extract_periodo(json.dumps(pdf_info, ensure_ascii=False))
+                    except Exception as e:
+                        logger.warning(f"Falha ao extrair PDF: {e}")
+
+                chamadas.append({
+                    "titulo": texto,
+                    "periodo_inscricao": periodo,
+                    "url_detalhes": href,
+                    "fonte": "CNPq",
+                    "pdf_baixado": pdf_path,
+                    "pdf_url": pdf_url,
+                    "pdf_info": pdf_info,
+                    "data_extracao": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                })
+                seen.add(k)
+                logger.info(f"✅ Chamada CNPq (fallback): {texto[:80]}...")
+                time.sleep(random.uniform(0.2, 0.6))
+            except Exception:
+                continue
+
+        return chamadas
         
     def _expand_chamadas_details(self, chamadas: List[Dict]) -> List[Dict]:
         """Tenta expandir detalhes das chamadas"""
