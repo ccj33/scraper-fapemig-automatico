@@ -74,29 +74,31 @@ class IntegradorPDF:
                             'pdf_extraido': True,
                             'pdf_paginas': dados_pdf.get('num_paginas'),
                             'pdf_tamanho': dados_pdf.get('tamanho_bytes'),
-                            'pdf_valor_encontrado': dados_pdf.get('valor'),
-                            'pdf_prazo_encontrado': dados_pdf.get('prazo'),
-                            'pdf_objetivo_encontrado': dados_pdf.get('objetivo'),
-                            'pdf_area_tematica': dados_pdf.get('area_tematica'),
+                            'pdf_valores_encontrados': dados_pdf.get('valores_encontrados'),
+                            'pdf_prazos_encontrados': dados_pdf.get('prazos_encontrados'),
+                            'pdf_objetivos_encontrados': dados_pdf.get('objetivos_encontrados'),
+                            'pdf_areas_encontradas': dados_pdf.get('areas_encontradas'),
+                            'pdf_datas_encontradas': dados_pdf.get('datas_encontradas'),
                             'pdf_estatisticas': dados_pdf.get('estatisticas'),
                             'pdf_idioma': dados_pdf.get('idioma_detectado'),
-                            'pdf_arquivo_local': dados_pdf.get('arquivo_local')
+                            'pdf_arquivo_local': dados_pdf.get('arquivo_local'),
+                            'pdf_resumo_conteudo': dados_pdf.get('resumo_conteudo')
                         })
                         
                         # Enriquecer dados existentes se não estiverem disponíveis
                         if not edital_processado.get('valor') or edital_processado['valor'] == "Valor não informado":
-                            if dados_pdf.get('valor'):
-                                edital_processado['valor'] = dados_pdf['valor']
+                            if dados_pdf.get('valores_encontrados') and len(dados_pdf['valores_encontrados']) > 0:
+                                edital_processado['valor'] = dados_pdf['valores_encontrados'][0]
                                 edital_processado['valor_fonte'] = 'PDF extraído'
                         
                         if not edital_processado.get('prazo') or edital_processado['prazo'] == "Prazo não informado":
-                            if dados_pdf.get('prazo'):
-                                edital_processado['prazo'] = dados_pdf['prazo']
+                            if dados_pdf.get('prazos_encontrados') and len(dados_pdf['prazos_encontrados']) > 0:
+                                edital_processado['prazo'] = dados_pdf['prazos_encontrados'][0]
                                 edital_processado['prazo_fonte'] = 'PDF extraído'
                         
                         if not edital_processado.get('objetivo') or edital_processado['objetivo'] == "Objetivo não informado":
-                            if dados_pdf.get('objetivo'):
-                                edital_processado['objetivo'] = dados_pdf['objetivo']
+                            if dados_pdf.get('objetivos_encontrados') and len(dados_pdf['objetivos_encontrados']) > 0:
+                                edital_processado['objetivo'] = dados_pdf['objetivos_encontrados'][0]
                                 edital_processado['objetivo_fonte'] = 'PDF extraído'
                         
                         logger.info(f"✅ PDF UFMG processado: {len(dados_pdf)} campos extraídos")
@@ -133,24 +135,26 @@ class IntegradorPDF:
                             'pdf_extraido': True,
                             'pdf_paginas': dados_pdf.get('num_paginas'),
                             'pdf_tamanho': dados_pdf.get('tamanho_bytes'),
-                            'pdf_valor_encontrado': dados_pdf.get('valor'),
-                            'pdf_prazo_encontrado': dados_pdf.get('prazo'),
-                            'pdf_objetivo_encontrado': dados_pdf.get('objetivo'),
-                            'pdf_area_tematica': dados_pdf.get('area_tematica'),
+                            'pdf_valores_encontrados': dados_pdf.get('valores_encontrados'),
+                            'pdf_prazos_encontrados': dados_pdf.get('prazos_encontrados'),
+                            'pdf_objetivos_encontrados': dados_pdf.get('objetivos_encontrados'),
+                            'pdf_areas_encontradas': dados_pdf.get('areas_encontradas'),
+                            'pdf_datas_encontradas': dados_pdf.get('datas_encontradas'),
                             'pdf_estatisticas': dados_pdf.get('estatisticas'),
                             'pdf_idioma': dados_pdf.get('idioma_detectado'),
-                            'pdf_arquivo_local': dados_pdf.get('arquivo_local')
+                            'pdf_arquivo_local': dados_pdf.get('arquivo_local'),
+                            'pdf_resumo_conteudo': dados_pdf.get('resumo_conteudo')
                         })
                         
                         # Enriquecer dados existentes
                         if not oportunidade_processada.get('valor') or oportunidade_processada['valor'] == "Valor não informado":
-                            if dados_pdf.get('valor'):
-                                oportunidade_processada['valor'] = dados_pdf['valor']
+                            if dados_pdf.get('valores_encontrados') and len(dados_pdf['valores_encontrados']) > 0:
+                                oportunidade_processada['valor'] = dados_pdf['valores_encontrados'][0]
                                 oportunidade_processada['valor_fonte'] = 'PDF extraído'
                         
                         if not oportunidade_processada.get('prazo') or oportunidade_processada['prazo'] == "Prazo não informado":
-                            if dados_pdf.get('prazo'):
-                                oportunidade_processada['prazo'] = dados_pdf['prazo']
+                            if dados_pdf.get('prazos_encontrados') and len(dados_pdf['prazos_encontrados']) > 0:
+                                oportunidade_processada['prazo'] = dados_pdf['prazos_encontrados'][0]
                                 oportunidade_processada['prazo_fonte'] = 'PDF extraído'
                         
                         logger.info(f"✅ PDF FAPEMIG processado: {len(dados_pdf)} campos extraídos")
@@ -196,29 +200,31 @@ class IntegradorPDF:
                                 'pdf_url_fonte': url,
                                 'pdf_paginas': dados_pdf.get('num_paginas'),
                                 'pdf_tamanho': dados_pdf.get('tamanho_bytes'),
-                                'pdf_valor_encontrado': dados_pdf.get('valor'),
-                                'pdf_prazo_encontrado': dados_pdf.get('prazo'),
-                                'pdf_objetivo_encontrado': dados_pdf.get('objetivo'),
-                                'pdf_area_tematica': dados_pdf.get('area_tematica'),
+                                'pdf_valores_encontrados': dados_pdf.get('valores_encontrados'),
+                                'pdf_prazos_encontrados': dados_pdf.get('prazos_encontrados'),
+                                'pdf_objetivos_encontrados': dados_pdf.get('objetivos_encontrados'),
+                                'pdf_areas_encontradas': dados_pdf.get('areas_encontradas'),
+                                'pdf_datas_encontradas': dados_pdf.get('datas_encontradas'),
                                 'pdf_estatisticas': dados_pdf.get('estatisticas'),
                                 'pdf_idioma': dados_pdf.get('idioma_detectado'),
-                                'pdf_arquivo_local': dados_pdf.get('arquivo_local')
+                                'pdf_arquivo_local': dados_pdf.get('arquivo_local'),
+                                'pdf_resumo_conteudo': dados_pdf.get('resumo_conteudo')
                             })
                             
                             # Enriquecer dados existentes
                             if not chamada_processada.get('valor') or chamada_processada['valor'] == "Valor não informado":
-                                if dados_pdf.get('valor'):
-                                    chamada_processada['valor'] = dados_pdf['valor']
+                                if dados_pdf.get('valores_encontrados') and len(dados_pdf['valores_encontrados']) > 0:
+                                    chamada_processada['valor'] = dados_pdf['valores_encontrados'][0]
                                     chamada_processada['valor_fonte'] = 'PDF extraído'
                             
                             if not chamada_processada.get('periodo_inscricao') or chamada_processada['periodo_inscricao'] == "Período não encontrado":
-                                if dados_pdf.get('prazo'):
-                                    chamada_processada['periodo_inscricao'] = dados_pdf['prazo']
+                                if dados_pdf.get('prazos_encontrados') and len(dados_pdf['prazos_encontrados']) > 0:
+                                    chamada_processada['periodo_inscricao'] = dados_pdf['prazos_encontrados'][0]
                                     chamada_processada['periodo_fonte'] = 'PDF extraído'
                             
                             if not chamada_processada.get('descricao') or chamada_processada['descricao'] == "Descrição não informada":
-                                if dados_pdf.get('objetivo'):
-                                    chamada_processada['descricao'] = dados_pdf['objetivo']
+                                if dados_pdf.get('objetivos_encontrados') and len(dados_pdf['objetivos_encontrados']) > 0:
+                                    chamada_processada['descricao'] = dados_pdf['objetivos_encontrados'][0]
                                     chamada_processada['descricao_fonte'] = 'PDF extraído'
                             
                             logger.info(f"✅ PDF CNPq processado: {len(dados_pdf)} campos extraídos")

@@ -104,12 +104,45 @@ class GeradorResumoMelhorado:
             # Informações do PDF se disponível
             if edital.get('pdf_extraido'):
                 formatted += f"   📄 PDF: ✅ Extraído ({edital.get('pdf_paginas', 'N/A')} páginas)\n"
+                formatted += f"      🔗 PDF: {edital.get('url', 'Link não disponível')}\n"
+                
+                # Valores encontrados no PDF
                 if edital.get('pdf_valor_encontrado'):
                     formatted += f"      💰 Valor no PDF: {edital['pdf_valor_encontrado']}\n"
+                elif edital.get('pdf_valores_encontrados'):
+                    valores = edital['pdf_valores_encontrados']
+                    if isinstance(valores, list) and valores:
+                        formatted += f"      💰 Valores no PDF: {', '.join(valores[:3])}\n"
+                
+                # Prazos encontrados no PDF
                 if edital.get('pdf_prazo_encontrado'):
                     formatted += f"      ⏰ Prazo no PDF: {edital['pdf_prazo_encontrado']}\n"
+                elif edital.get('pdf_prazos_encontrados'):
+                    prazos = edital['pdf_prazos_encontrados']
+                    if isinstance(prazos, list) and prazos:
+                        formatted += f"      ⏰ Prazos no PDF: {', '.join(prazos[:5])}\n"
+                
+                # Objetivos encontrados no PDF
                 if edital.get('pdf_objetivo_encontrado'):
                     formatted += f"      🎯 Objetivo no PDF: {edital['pdf_objetivo_encontrado'][:80]}...\n"
+                elif edital.get('pdf_objetivos_encontrados'):
+                    objetivos = edital['pdf_objetivos_encontrados']
+                    if isinstance(objetivos, list) and objetivos:
+                        formatted += f"      🎯 Objetivos no PDF: {objetivos[0][:80]}...\n"
+                
+                # Áreas encontradas no PDF
+                if edital.get('pdf_area_tematica'):
+                    formatted += f"      🔬 Área no PDF: {edital['pdf_area_tematica'][:80]}...\n"
+                elif edital.get('pdf_areas_encontradas'):
+                    areas = edital['pdf_areas_encontradas']
+                    if isinstance(areas, list) and areas:
+                        formatted += f"      🔬 Áreas no PDF: {areas[0][:80]}...\n"
+                
+                # Datas encontradas no PDF
+                if edital.get('pdf_datas_encontradas'):
+                    datas = edital['pdf_datas_encontradas']
+                    if isinstance(datas, list) and datas:
+                        formatted += f"      📅 Datas no PDF: {', '.join(datas[:5])}\n"
             elif edital.get('pdf_erro'):
                 formatted += f"   📄 PDF: ❌ Erro - {edital['pdf_erro']}\n"
             else:
@@ -150,12 +183,45 @@ class GeradorResumoMelhorado:
             # Informações do PDF se disponível
             if oportunidade.get('pdf_extraido'):
                 formatted += f"   📄 PDF: ✅ Extraído ({oportunidade.get('pdf_paginas', 'N/A')} páginas)\n"
+                formatted += f"      🔗 PDF: {oportunidade.get('url', 'Link não disponível')}\n"
+                
+                # Valores encontrados no PDF
                 if oportunidade.get('pdf_valor_encontrado'):
                     formatted += f"      💰 Valor no PDF: {oportunidade['pdf_valor_encontrado']}\n"
+                elif oportunidade.get('pdf_valores_encontrados'):
+                    valores = oportunidade['pdf_valores_encontrados']
+                    if isinstance(valores, list) and valores:
+                        formatted += f"      💰 Valores no PDF: {', '.join(valores[:3])}\n"
+                
+                # Prazos encontrados no PDF
                 if oportunidade.get('pdf_prazo_encontrado'):
                     formatted += f"      ⏰ Prazo no PDF: {oportunidade['pdf_prazo_encontrado']}\n"
+                elif oportunidade.get('pdf_prazos_encontrados'):
+                    prazos = oportunidade['pdf_prazos_encontrados']
+                    if isinstance(prazos, list) and prazos:
+                        formatted += f"      ⏰ Prazos no PDF: {', '.join(prazos[:5])}\n"
+                
+                # Objetivos encontrados no PDF
                 if oportunidade.get('pdf_objetivo_encontrado'):
                     formatted += f"      🎯 Objetivo no PDF: {oportunidade['pdf_objetivo_encontrado'][:80]}...\n"
+                elif oportunidade.get('pdf_objetivos_encontrados'):
+                    objetivos = oportunidade['pdf_objetivos_encontrados']
+                    if isinstance(objetivos, list) and objetivos:
+                        formatted += f"      🎯 Objetivos no PDF: {objetivos[0][:80]}...\n"
+                
+                # Áreas encontradas no PDF
+                if oportunidade.get('pdf_area_tematica'):
+                    formatted += f"      🔬 Área no PDF: {oportunidade['pdf_area_tematica'][:80]}...\n"
+                elif oportunidade.get('pdf_areas_encontradas'):
+                    areas = oportunidade['pdf_areas_encontradas']
+                    if isinstance(areas, list) and areas:
+                        formatted += f"      🔬 Áreas no PDF: {areas[0][:80]}...\n"
+                
+                # Datas encontradas no PDF
+                if oportunidade.get('pdf_datas_encontradas'):
+                    datas = oportunidade['pdf_datas_encontradas']
+                    if isinstance(datas, list) and datas:
+                        formatted += f"      📅 Datas no PDF: {', '.join(datas[:5])}\n"
             elif oportunidade.get('pdf_erro'):
                 formatted += f"   📄 PDF: ❌ Erro - {oportunidade['pdf_erro']}\n"
             else:
@@ -202,12 +268,45 @@ class GeradorResumoMelhorado:
             # Informações do PDF se disponível
             if chamada.get('pdf_extraido'):
                 formatted += f"   📄 PDF: ✅ Extraído ({chamada.get('pdf_paginas', 'N/A')} páginas)\n"
+                formatted += f"      🔗 PDF: {chamada.get('url_detalhes', 'Link não disponível')}\n"
+                
+                # Valores encontrados no PDF
                 if chamada.get('pdf_valor_encontrado'):
                     formatted += f"      💰 Valor no PDF: {chamada['pdf_valor_encontrado']}\n"
+                elif chamada.get('pdf_valores_encontrados'):
+                    valores = chamada['pdf_valores_encontrados']
+                    if isinstance(valores, list) and valores:
+                        formatted += f"      💰 Valores no PDF: {', '.join(valores[:3])}\n"
+                
+                # Prazos encontrados no PDF
                 if chamada.get('pdf_prazo_encontrado'):
                     formatted += f"      ⏰ Prazo no PDF: {chamada['pdf_prazo_encontrado']}\n"
+                elif chamada.get('pdf_prazos_encontrados'):
+                    prazos = chamada['pdf_prazos_encontrados']
+                    if isinstance(prazos, list) and prazos:
+                        formatted += f"      ⏰ Prazos no PDF: {', '.join(prazos[:5])}\n"
+                
+                # Objetivos encontrados no PDF
                 if chamada.get('pdf_objetivo_encontrado'):
                     formatted += f"      🎯 Objetivo no PDF: {chamada['pdf_objetivo_encontrado'][:80]}...\n"
+                elif chamada.get('pdf_objetivos_encontrados'):
+                    objetivos = chamada['pdf_objetivos_encontrados']
+                    if isinstance(objetivos, list) and objetivos:
+                        formatted += f"      🎯 Objetivos no PDF: {objetivos[0][:80]}...\n"
+                
+                # Áreas encontradas no PDF
+                if chamada.get('pdf_area_tematica'):
+                    formatted += f"      🔬 Área no PDF: {chamada['pdf_area_tematica'][:80]}...\n"
+                elif chamada.get('pdf_areas_encontradas'):
+                    areas = chamada['pdf_areas_encontradas']
+                    if isinstance(areas, list) and areas:
+                        formatted += f"      🔬 Áreas no PDF: {areas[0][:80]}...\n"
+                
+                # Datas encontradas no PDF
+                if chamada.get('pdf_datas_encontradas'):
+                    datas = chamada['pdf_datas_encontradas']
+                    if isinstance(datas, list) and datas:
+                        formatted += f"      📅 Datas no PDF: {', '.join(datas[:5])}\n"
             elif chamada.get('pdf_erro'):
                 formatted += f"   📄 PDF: ❌ Erro - {chamada['pdf_erro']}\n"
             else:
