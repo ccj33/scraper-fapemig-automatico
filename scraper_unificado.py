@@ -30,6 +30,8 @@ from typing import List, Dict, Optional, Tuple
 import random
 import requests
 import os
+import PyPDF2
+import fitz  # PyMuPDF
 
 # Configuração de logging
 logging.basicConfig(
@@ -174,6 +176,142 @@ class BaseScraper:
         except Exception as e:
             logger.warning(f"⚠️ Erro ao baixar PDF específico {url}: {e}")
             return ""
+            
+    def extract_pdf_content(self, pdf_path: str) -> Dict:
+        """Extrai conteúdo e informações detalhadas de um PDF"""
+        if not pdf_path or not os.path.exists(pdf_path):
+            return {}
+            
+        try:
+            logger.info(f"📖 Lendo conteúdo do PDF: {pdf_path}")
+            
+            # Tentar com PyMuPDF primeiro (mais robusto)
+            try:
+                return self._extract_with_pymupdf(pdf_path)
+            except:
+                # Fallback para PyPDF2
+                try:
+                    return self._extract_with_pypdf2(pdf_path)
+                except:
+                    logger.warning(f"⚠️ Não foi possível ler o PDF: {pdf_path}")
+                    return {}
+                    
+        except Exception as e:
+            logger.error(f"❌ Erro ao extrair conteúdo do PDF {pdf_path}: {e}")
+            return {}
+            
+    def _extract_with_pymupdf(self, pdf_path: str) -> Dict:
+        """Extrai conteúdo usando PyMuPDF"""
+        doc = fitz.open(pdf_path)
+        texto_completo = ""
+        
+        for page_num in range(len(doc)):
+            page = doc.load_page(page_num)
+            texto_completo += page.get_text()
+            
+        doc.close()
+        
+        return self._analyze_pdf_text(texto_completo)
+        
+    def _extract_with_pypdf2(self, pdf_path: str) -> Dict:
+        """Extrai conteúdo usando PyPDF2"""
+        with open(pdf_path, 'rb') as file:
+            reader = PyPDF2.PdfReader(file)
+            texto_completo = ""
+            
+            for page in reader.pages:
+                texto_completo += page.extract_text()
+                
+        return self._analyze_pdf_text(texto_completo)
+        
+    def _analyze_pdf_text(self, texto: str) -> Dict:
+        """Analisa o texto extraído do PDF para encontrar informações importantes"""
+        import re
+        
+        info = {}
+        
+        # Padrões para datas
+        date_patterns = [
+            r'(\d{2}/\d{2}/\d{4})',  # DD/MM/AAAA
+            r'(\d{2}-\d{2}-\d{4})',  # DD-MM-AAAA
+            r'(\d{2}\.\d{2}\.\d{4})', # DD.MM.AAAA
+            r'(\d{1,2}\s+de\s+\w+\s+de\s+\d{4})', # 15 de agosto de 2025
+        ]
+        
+        datas_encontradas = []
+        for pattern in date_patterns:
+            matches = re.findall(pattern, texto)
+            datas_encontradas.extend(matches)
+            
+        if datas_encontradas:
+            info['datas_encontradas'] = list(set(datas_encontradas))  # Remove duplicatas
+            
+        # Padrões para valores/recursos
+        valor_patterns = [
+            r'R\$\s*([\d.,]+)',  # R$ 50.000,00
+            r'(\d+\.?\d*)\s*mil\s*reais',  # 50 mil reais
+            r'(\d+\.?\d*)\s*milhões?\s*de\s*reais',  # 2 milhões de reais
+            r'Valor:\s*R\$\s*([\d.,]+)',  # Valor: R$ 100.000,00
+        ]
+        
+        valores_encontrados = []
+        for pattern in valor_patterns:
+            matches = re.findall(pattern, texto, re.IGNORECASE)
+            valores_encontrados.extend(matches)
+            
+        if valores_encontrados:
+            info['valores_encontrados'] = valores_encontrados
+            
+        # Padrões para prazos
+        prazo_patterns = [
+            r'prazo.*?(\d{2}/\d{2}/\d{4})',  # prazo até 30/09/2025
+            r'até.*?(\d{2}/\d{2}/\d{4})',    # até 30/09/2025
+            r'vencimento.*?(\d{2}/\d{2}/\d{4})', # vencimento 30/09/2025
+            r'inscrições.*?(\d{2}/\d{2}/\d{4})', # inscrições até 30/09/2025
+        ]
+        
+        prazos_encontrados = []
+        for pattern in prazo_patterns:
+            matches = re.findall(pattern, texto, re.IGNORECASE)
+            prazos_encontrados.extend(matches)
+            
+        if prazos_encontrados:
+            info['prazos_encontrados'] = list(set(prazos_encontrados))
+            
+        # Padrões para objetivos/descrição
+        objetivo_patterns = [
+            r'Objetivo[:\s]*([^.\n]+)',
+            r'Objetivos[:\s]*([^.\n]+)',
+            r'Descrição[:\s]*([^.\n]+)',
+            r'Resumo[:\s]*([^.\n]+)',
+        ]
+        
+        for pattern in objetivo_patterns:
+            match = re.search(pattern, texto, re.IGNORECASE)
+            if match:
+                info['objetivo'] = match.group(1).strip()
+                break
+                
+        # Padrões para área/tema
+        area_patterns = [
+            r'Área[:\s]*([^.\n]+)',
+            r'Tema[:\s]*([^.\n]+)',
+            r'Linha[:\s]*([^.\n]+)',
+            r'Campo[:\s]*([^.\n]+)',
+        ]
+        
+        for pattern in area_patterns:
+            match = re.search(pattern, texto, re.IGNORECASE)
+            if match:
+                info['area_tema'] = match.group(1).strip()
+                break
+                
+        # Contar páginas e tamanho
+        info['tamanho_texto'] = len(texto)
+        info['palavras'] = len(texto.split())
+        
+        logger.info(f"✅ PDF analisado: {len(info)} informações extraídas")
+        return info
 
 class UFMGScraper(BaseScraper):
     """Scraper para UFMG - Editais e Chamadas"""
@@ -239,12 +377,18 @@ class UFMGScraper(BaseScraper):
                         # Tentar baixar PDF se for um link de PDF
                         pdf_path = self.download_pdf_if_available(href, titulo)
                         
+                        # Se PDF foi baixado, extrair conteúdo detalhado
+                        pdf_info = {}
+                        if pdf_path:
+                            pdf_info = self.extract_pdf_content(pdf_path)
+                        
                         edital = {
                             'titulo': titulo,
                             'url': href,
                             'data': data,
                             'fonte': 'UFMG',
                             'pdf_baixado': pdf_path,
+                            'pdf_info': pdf_info,
                             'data_extracao': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         }
                         
@@ -356,11 +500,17 @@ class FAPEMIGScraper(BaseScraper):
                         # Tentar baixar PDF se for um link de PDF
                         pdf_path = self.download_pdf_if_available(link, texto)
                         
+                        # Se PDF foi baixado, extrair conteúdo detalhado
+                        pdf_info = {}
+                        if pdf_path:
+                            pdf_info = self.extract_pdf_content(pdf_path)
+                        
                         chamada = {
                             'titulo': texto,
                             'url': link,
                             'fonte': 'FAPEMIG',
                             'pdf_baixado': pdf_path,
+                            'pdf_info': pdf_info,
                             'data_extracao': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         }
                         
@@ -507,12 +657,18 @@ class CNPqScraper(BaseScraper):
                         # Tentar baixar PDF se for um link de PDF
                         pdf_path = self.download_pdf_if_available(link_detalhes, texto)
                         
+                        # Se PDF foi baixado, extrair conteúdo detalhado
+                        pdf_info = {}
+                        if pdf_path:
+                            pdf_info = self.extract_pdf_content(pdf_path)
+                        
                         chamada = {
                             'titulo': texto,
                             'periodo_inscricao': periodo,
                             'url_detalhes': link_detalhes,
                             'fonte': 'CNPq',
                             'pdf_baixado': pdf_path,
+                            'pdf_info': pdf_info,
                             'data_extracao': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         }
                         
@@ -723,11 +879,14 @@ class ScraperUnificado:
             
     def _generate_summary(self) -> str:
         """Gera resumo em texto dos resultados"""
-        # Contar PDFs baixados
+        # Contar PDFs baixados e analisados
         pdfs_ufmg = sum(1 for e in self.results['ufmg'] if e.get('pdf_baixado'))
         pdfs_fapemig = sum(1 for e in self.results['fapemig'] if e.get('pdf_baixado'))
         pdfs_cnpq = sum(1 for e in self.results['cnpq'] if e.get('pdf_baixado'))
         total_pdfs = pdfs_ufmg + pdfs_fapemig + pdfs_cnpq
+        
+        # Contar PDFs com conteúdo extraído
+        pdfs_analisados = sum(1 for e in self.results['ufmg'] + self.results['fapemig'] + self.results['cnpq'] if e.get('pdf_info'))
         
         summary = f"""
 🚀 RESUMO DO SCRAPING UNIFICADO
@@ -735,6 +894,7 @@ class ScraperUnificado:
 Data/Hora: {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}
 Total de Oportunidades: {self.results['total_editais']}
 📄 PDFs Baixados: {total_pdfs}
+📖 PDFs Analisados: {pdfs_analisados}
 
 📊 UFMG - Editais e Chamadas
 -----------------------------
@@ -781,6 +941,22 @@ PDFs: {pdfs_cnpq} baixados
                 formatted += f"   📅 Período: {edital['periodo_inscricao']}\n"
             if edital.get('valor'):
                 formatted += f"   💰 Valor: {edital['valor']}\n"
+                
+            # Informações extraídas do PDF
+            if edital.get('pdf_info'):
+                pdf_info = edital['pdf_info']
+                
+                if pdf_info.get('datas_encontradas'):
+                    formatted += f"   📅 Datas no PDF: {', '.join(pdf_info['datas_encontradas'][:3])}\n"
+                if pdf_info.get('prazos_encontrados'):
+                    formatted += f"   ⏰ Prazos: {', '.join(pdf_info['prazos_encontrados'][:2])}\n"
+                if pdf_info.get('valores_encontrados'):
+                    formatted += f"   💰 Valores: {', '.join(pdf_info['valores_encontrados'][:2])}\n"
+                if pdf_info.get('objetivo'):
+                    formatted += f"   🎯 Objetivo: {pdf_info['objetivo'][:80]}...\n"
+                if pdf_info.get('area_tema'):
+                    formatted += f"   🔬 Área: {pdf_info['area_tema'][:60]}...\n"
+                    
             if edital.get('pdf_baixado'):
                 formatted += f"   📄 PDF: Baixado ✅\n"
             elif edital.get('url') and edital['url'].lower().endswith('.pdf'):
