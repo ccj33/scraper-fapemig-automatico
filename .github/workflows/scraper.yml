@@ -2,8 +2,11 @@ name: 🚀 Scraper Automatizado com Email
 
 on:
   schedule:
-    - cron: '0 8 * * *'  # Executa todos os dias às 8h
+    - cron: '0 8 * * *'  # Executa todos os dias às 8h UTC
+    - cron: '0 12 * * *'  # Executa todos os dias às 12h UTC (9h BRT)
+    - cron: '0 18 * * *'  # Executa todos os dias às 18h UTC (15h BRT)
   workflow_dispatch:  # Permite execução manual
+  push:  # Executa quando há push no repositório
 
 jobs:
   scraper:
