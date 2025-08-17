@@ -112,8 +112,8 @@ jobs:
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
           subject: "📋 RELATÓRIO DIÁRIO - Oportunidades de Pesquisa e Editais"
-          to: clevioferreira@gmail.com
-          from: "Sistema de Scraping <clevioferreira@gmail.com>"
+          to: ccjota51@gmail.com
+          from: "Sistema de Scraping <ccjota51@gmail.com>"
           body: |
             <html>
             <head>
