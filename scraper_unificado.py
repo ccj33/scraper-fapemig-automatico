@@ -85,8 +85,13 @@ class BaseScraper:
     def download_pdf_if_available(self, url: str, titulo: str) -> str:
         """Baixa PDF se disponível e retorna o caminho do arquivo"""
         try:
-            if not url or not url.lower().endswith('.pdf'):
+            if not url:
                 return ""
+                
+            # Verificar se é um arquivo que pode ser baixado
+            if not any(ext in url.lower() for ext in ['.pdf', '.doc', '.docx']):
+                # Se não é arquivo direto, tentar encontrar PDF na página
+                return self._find_and_download_pdf_from_page(url, titulo)
                 
             # Criar diretório para PDFs se não existir
             pdf_dir = "pdfs_baixados"
@@ -110,6 +115,64 @@ class BaseScraper:
             
         except Exception as e:
             logger.warning(f"⚠️ Erro ao baixar PDF {url}: {e}")
+            return ""
+            
+    def _find_and_download_pdf_from_page(self, url: str, titulo: str) -> str:
+        """Tenta encontrar e baixar PDF de uma página específica"""
+        try:
+            # Acessar a página para procurar PDFs
+            self.driver.get(url)
+            self.random_delay(2, 3)
+            
+            # Procurar por links de PDF
+            pdf_links = self.safe_find_elements(By.CSS_SELECTOR, 'a[href*=".pdf"], a[href*=".doc"], a[href*=".docx"]')
+            
+            for link in pdf_links:
+                href = self.safe_get_attribute(link, "href")
+                if href and href.startswith("http"):
+                    # Tentar baixar este PDF
+                    return self._download_specific_pdf(href, titulo)
+                    
+            # Se não encontrou, procurar por texto que sugira PDF
+            text_elements = self.safe_find_elements(By.XPATH, '//*[contains(text(), "PDF") or contains(text(), "Download") or contains(text(), "Edital")]')
+            for element in text_elements:
+                parent = element.find_element(By.XPATH, "./..")
+                links = parent.find_elements(By.TAG_NAME, "a")
+                for link in links:
+                    href = self.safe_get_attribute(link, "href")
+                    if href and href.startswith("http"):
+                        return self._download_specific_pdf(href, titulo)
+                        
+        except Exception as e:
+            logger.warning(f"⚠️ Erro ao procurar PDF na página {url}: {e}")
+            
+        return ""
+        
+    def _download_specific_pdf(self, url: str, titulo: str) -> str:
+        """Baixa um PDF específico"""
+        try:
+            # Criar diretório para PDFs se não existir
+            pdf_dir = "pdfs_baixados"
+            if not os.path.exists(pdf_dir):
+                os.makedirs(pdf_dir)
+                
+            # Nome do arquivo baseado no título
+            safe_title = "".join(c for c in titulo if c.isalnum() or c in (' ', '-', '_')).rstrip()
+            safe_title = safe_title[:50]  # Limitar tamanho
+            filename = f"{pdf_dir}/{safe_title}.pdf"
+            
+            # Baixar PDF
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+            
+            with open(filename, 'wb') as f:
+                f.write(response.content)
+                
+            logger.info(f"✅ PDF encontrado e baixado: {filename}")
+            return filename
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Erro ao baixar PDF específico {url}: {e}")
             return ""
 
 class UFMGScraper(BaseScraper):
@@ -161,8 +224,8 @@ class UFMGScraper(BaseScraper):
         editais = []
         
         try:
-            # Procurar por links de editais
-            edital_links = self.safe_find_elements(By.CSS_SELECTOR, 'a[href*="Edital"], a[href*="edital"]')
+            # Procurar por links de editais (mais abrangente)
+            edital_links = self.safe_find_elements(By.CSS_SELECTOR, 'a[href*="Edital"], a[href*="edital"], a[href*=".pdf"], a[href*=".doc"]')
             
             for link in edital_links:
                 try:
@@ -271,6 +334,7 @@ class FAPEMIGScraper(BaseScraper):
     def _extract_page_chamadas(self) -> List[Dict]:
         """Extrai chamadas da página principal"""
         chamadas = []
+        titulos_processados = set()  # Para evitar duplicatas
         
         try:
             # Procurar por títulos de chamadas
@@ -281,6 +345,11 @@ class FAPEMIGScraper(BaseScraper):
                     texto = self.safe_get_text(titulo)
                     
                     if texto and any(palavra in texto.lower() for palavra in ['chamada', 'edital', 'oportunidade']):
+                        # Verificar se já processamos este título
+                        if texto in titulos_processados:
+                            continue
+                        titulos_processados.add(texto)
+                        
                         # Procurar link associado
                         link = self._find_link_near_title(titulo)
                         
@@ -315,7 +384,27 @@ class FAPEMIGScraper(BaseScraper):
             
             for link in links:
                 href = self.safe_get_attribute(link, "href")
+                texto_link = self.safe_get_text(link)
+                
+                # Priorizar links que parecem ser PDFs ou editais
                 if href and href.startswith("http"):
+                    if any(ext in href.lower() for ext in ['.pdf', '.doc', '.docx']):
+                        return href
+                    if any(palavra in texto_link.lower() for palavra in ['edital', 'chamada', 'pdf', 'download']):
+                        return href
+                    return href  # Retorna o primeiro link válido
+                    
+        except:
+            pass
+            
+        # Se não encontrou no parent, procurar em toda a página
+        try:
+            links_globais = self.driver.find_elements(By.TAG_NAME, "a")
+            for link in links_globais:
+                href = self.safe_get_attribute(link, "href")
+                texto_link = self.safe_get_text(link)
+                
+                if href and href.startswith("http") and any(palavra in texto_link.lower() for palavra in ['edital', 'chamada', 'pdf']):
                     return href
                     
         except:
@@ -474,7 +563,20 @@ class CNPqScraper(BaseScraper):
                 href = self.safe_get_attribute(link, "href")
                 texto = self.safe_get_text(link)
                 
-                if href and ("chamada" in texto.lower() or "detalhes" in texto.lower()):
+                if href and ("chamada" in texto.lower() or "detalhes" in texto.lower() or "pdf" in texto.lower()):
+                    return href
+                    
+        except:
+            pass
+            
+        # Se não encontrou no parent, procurar em toda a página
+        try:
+            links_globais = self.driver.find_elements(By.TAG_NAME, "a")
+            for link in links_globais:
+                href = self.safe_get_attribute(link, "href")
+                texto = self.safe_get_text(link)
+                
+                if href and href.startswith("http") and any(palavra in texto.lower() for palavra in ['chamada', 'detalhes', 'pdf', 'edital']):
                     return href
                     
         except:
@@ -665,7 +767,25 @@ PDFs: {pdfs_cnpq} baixados
             
         formatted = ""
         for i, edital in enumerate(editais[:5], 1):  # Mostrar apenas os 5 primeiros
-            formatted += f"{i}. {edital.get('titulo', 'Sem título')[:60]}...\n"
+            titulo = edital.get('titulo', 'Sem título')
+            # Mostrar título completo se for menor que 80 caracteres
+            if len(titulo) <= 80:
+                formatted += f"{i}. {titulo}\n"
+            else:
+                formatted += f"{i}. {titulo[:80]}...\n"
+            
+            # Adicionar informações extras se disponíveis
+            if edital.get('data'):
+                formatted += f"   📅 Data: {edital['data']}\n"
+            if edital.get('periodo_inscricao'):
+                formatted += f"   📅 Período: {edital['periodo_inscricao']}\n"
+            if edital.get('valor'):
+                formatted += f"   💰 Valor: {edital['valor']}\n"
+            if edital.get('pdf_baixado'):
+                formatted += f"   📄 PDF: Baixado ✅\n"
+            elif edital.get('url') and edital['url'].lower().endswith('.pdf'):
+                formatted += f"   📄 PDF: Disponível (não baixado)\n"
+            formatted += "\n"
             
         if len(editais) > 5:
             formatted += f"... e mais {len(editais) - 5} oportunidades\n"
