@@ -3,7 +3,7 @@
 Scraper Final Melhorado - Sistema Completo de Extração
 ======================================================
 
-Versão 3.0 - Extração inteligente, PDFs e relatórios legíveis
+Versão 3.1 - Corrigido duplicatas e melhorado extração de links
 """
 
 import smtplib
@@ -40,7 +40,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class ScraperFinalMelhorado:
-    """Scraper final com todas as melhorias"""
+    """Scraper final com todas as melhorias e correções"""
     
     def __init__(self):
         self.driver = None
@@ -162,7 +162,7 @@ class ScraperFinalMelhorado:
             return []
             
     def _scrape_fapemig(self) -> List[Dict]:
-        """Scraper específico para FAPEMIG"""
+        """Scraper específico para FAPEMIG - CORRIGIDO DUPLICATAS"""
         logger.info("🚀 Iniciando extração FAPEMIG...")
         
         try:
@@ -170,30 +170,51 @@ class ScraperFinalMelhorado:
             time.sleep(3)
             
             chamadas = []
+            titulos_processados = set()  # Para evitar duplicatas
             
-            # Procurar por títulos de chamadas
+            # Procurar por títulos de chamadas - ESTRATÉGIA MELHORADA
             titulos = self.driver.find_elements(By.CSS_SELECTOR, 'h1, h2, h3, h4, h5, h6')
             
-            for titulo in titulos[:8]:  # Limitar a 8
+            for titulo in titulos:
                 try:
                     texto = titulo.text.strip()
                     
+                    # Verificar se já processamos este título
+                    if texto in titulos_processados:
+                        continue
+                        
                     if texto and any(palavra in texto.lower() for palavra in ['chamada', 'edital', 'oportunidade']):
+                        # Adicionar ao set de processados
+                        titulos_processados.add(texto)
+                        
                         chamada = {
                             'titulo': texto,
                             'fonte': 'FAPEMIG',
                             'data_extracao': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         }
                         
-                        # Procurar link próximo
+                        # Procurar link próximo - ESTRATÉGIA MELHORADA
                         try:
+                            # Procurar em diferentes níveis da hierarquia
                             parent = titulo.find_element(By.XPATH, "./..")
                             links = parent.find_elements(By.TAG_NAME, "a")
+                            
                             for link in links:
                                 href = link.get_attribute("href")
-                                if href and href.startswith("http"):
+                                if href and href.startswith("http") and "#" in href:
                                     chamada['url'] = href
                                     break
+                                    
+                            # Se não encontrou, procurar no próximo nível
+                            if 'url' not in chamada:
+                                grandparent = parent.find_element(By.XPATH, "./..")
+                                links = grandparent.find_elements(By.TAG_NAME, "a")
+                                for link in links:
+                                    href = link.get_attribute("href")
+                                    if href and href.startswith("http") and "#" in href:
+                                        chamada['url'] = href
+                                        break
+                                        
                         except:
                             chamada['url'] = "Link não encontrado"
                             
@@ -203,6 +224,7 @@ class ScraperFinalMelhorado:
                     logger.warning(f"⚠️ Erro ao processar título FAPEMIG: {e}")
                     continue
                     
+            logger.info(f"✅ FAPEMIG: {len(chamadas)} chamadas únicas extraídas")
             return chamadas
             
         except Exception as e:
@@ -210,7 +232,7 @@ class ScraperFinalMelhorado:
             return []
             
     def _scrape_cnpq(self) -> List[Dict]:
-        """Scraper específico para CNPq"""
+        """Scraper específico para CNPq - MELHORADO EXTRAÇÃO DE LINKS"""
         logger.info("🚀 Iniciando extração CNPq...")
         
         try:
@@ -219,10 +241,11 @@ class ScraperFinalMelhorado:
             
             chamadas = []
             
-            # Procurar por títulos de chamadas
+            # ESTRATÉGIA MELHORADA: Procurar por diferentes tipos de elementos
+            # 1. Títulos de chamadas
             titulos = self.driver.find_elements(By.XPATH, '//h4[contains(text(), "CHAMADA") or contains(text(), "Chamada")]')
             
-            for titulo in titulos[:6]:  # Limitar a 6
+            for titulo in titulos[:8]:  # Aumentar limite
                 try:
                     texto = titulo.text.strip()
                     
@@ -243,12 +266,56 @@ class ScraperFinalMelhorado:
                         except:
                             chamada['periodo_inscricao'] = "Período não encontrado"
                             
+                        # ESTRATÉGIA MELHORADA PARA LINKS
+                        try:
+                            # Procurar em diferentes níveis
+                            parent = titulo.find_element(By.XPATH, "./..")
+                            
+                            # 1. Procurar por links diretos
+                            links = parent.find_elements(By.TAG_NAME, "a")
+                            for link in links:
+                                href = link.get_attribute("href")
+                                texto_link = link.text.strip()
+                                if href and href.startswith("http"):
+                                    chamada['url_detalhes'] = href
+                                    chamada['tipo_link'] = "Link direto"
+                                    break
+                                    
+                            # 2. Se não encontrou, procurar por botões
+                            if 'url_detalhes' not in chamada:
+                                botoes = parent.find_elements(By.CSS_SELECTOR, 'button, input[type="button"], .btn')
+                                for botao in botoes:
+                                    onclick = botao.get_attribute("onclick")
+                                    if onclick and "window.open" in onclick:
+                                        # Extrair URL do onclick
+                                        url_match = re.search(r"window\.open\('([^']+)'", onclick)
+                                        if url_match:
+                                            chamada['url_detalhes'] = url_match.group(1)
+                                            chamada['tipo_link'] = "Botão onclick"
+                                            break
+                                            
+                            # 3. Procurar no próximo nível da hierarquia
+                            if 'url_detalhes' not in chamada:
+                                grandparent = parent.find_element(By.XPATH, "./..")
+                                links = grandparent.find_elements(By.TAG_NAME, "a")
+                                for link in links:
+                                    href = link.get_attribute("href")
+                                    if href and href.startswith("http"):
+                                        chamada['url_detalhes'] = href
+                                        chamada['tipo_link'] = "Link próximo nível"
+                                        break
+                                        
+                        except Exception as e:
+                            logger.warning(f"⚠️ Erro ao extrair link CNPq: {e}")
+                            chamada['url_detalhes'] = "Link não encontrado"
+                            
                         chamadas.append(chamada)
                         
                 except Exception as e:
                     logger.warning(f"⚠️ Erro ao processar título CNPq: {e}")
                     continue
                     
+            logger.info(f"✅ CNPq: {len(chamadas)} chamadas extraídas")
             return chamadas
             
         except Exception as e:
