@@ -28,18 +28,12 @@ jobs:
           pip install -r requirements.txt
           pip list
           
-      - name: 🧪 Teste do ambiente
-        env:
-          EMAIL_USER: ${{ secrets.EMAIL_USER }}
-          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
-        run: python teste_github_actions.py
-          
-      - name: 🚀 Executar scraper unificado
+      - name: 🚀 Executar scraper robusto unificado
         env:
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
           EMAIL_DESTINO: clevioferreira@gmail.com
-        run: python scraper_unificado.py
+        run: python scraper_robusto_unificado.py
         
       - name: 📁 Upload arquivos gerados
         uses: actions/upload-artifact@v4

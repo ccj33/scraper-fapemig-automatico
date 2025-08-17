@@ -1,21 +1,10 @@
-# Dependências principais para o sistema robusto
 selenium>=4.15.0
 chromedriver-autoinstaller>=0.6.0
-
-# Download robusto com redirecionamentos
 httpx>=0.25.0
-
-# Extração de PDFs (múltiplos métodos)
 PyPDF2>=3.0.0
 PyMuPDF>=1.23.0
 pdfminer.six>=20221105
-
-# OCR para PDFs que não podem ser lidos
 pytesseract>=0.3.10
 Pillow>=10.0.0
-
-# Processamento de dados
 requests>=2.31.0
-
-# Utilitários
 python-dateutil>=2.8.2

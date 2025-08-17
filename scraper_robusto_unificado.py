@@ -109,6 +109,77 @@ class BaseScraperRobusto:
                 'url_origem': url,
                 'data_extracao': datetime.now().isoformat()
             }
+    
+    def _extract_context_around_title(self, titulo_element) -> str:
+        """Extrai contexto ao redor do título de forma robusta"""
+        try:
+            contexto_parts = []
+            
+            # ESTRATÉGIA 1: Texto do parent
+            try:
+                parent = titulo_element.find_element(By.XPATH, "./..")
+                parent_text = self.safe_get_text(parent)
+                if parent_text and len(parent_text) > 20:
+                    contexto_parts.append(parent_text)
+            except Exception as e:
+                logger.debug(f"⚠️ Erro ao extrair texto do parent: {e}")
+            
+            # ESTRATÉGIA 2: Texto dos siblings (following-sibling)
+            try:
+                siblings = titulo_element.find_elements(By.XPATH, "following-sibling::*")
+                for sibling in siblings[:5]:  # Primeiros 5 siblings
+                    sibling_text = self.safe_get_text(sibling)
+                    if sibling_text and len(sibling_text) > 20:  # Só adiciona se tiver conteúdo
+                        contexto_parts.append(sibling_text)
+            except Exception as e:
+                logger.debug(f"⚠️ Erro ao extrair texto dos siblings: {e}")
+            
+            # ESTRATÉGIA 3: Texto dos siblings anteriores (preceding-sibling)
+            try:
+                prev_siblings = titulo_element.find_elements(By.XPATH, "preceding-sibling::*")
+                for sibling in prev_siblings[-3:]:  # Últimos 3 siblings anteriores
+                    sibling_text = self.safe_get_text(sibling)
+                    if sibling_text and len(sibling_text) > 20:
+                        contexto_parts.append(sibling_text)
+            except Exception as e:
+                logger.debug(f"⚠️ Erro ao extrair texto dos siblings anteriores: {e}")
+            
+            # ESTRATÉGIA 4: Parágrafos e divs próximos
+            try:
+                parent = titulo_element.find_element(By.XPATH, "./..")
+                paragrafos = parent.find_elements(By.TAG_NAME, "p")
+                if paragrafos:
+                    for p in paragrafos[:3]:
+                        texto = self.safe_get_text(p)
+                        if texto and len(texto) > 20:
+                            contexto_parts.append(texto)
+                            
+                divs = parent.find_elements(By.TAG_NAME, "div")
+                for div in divs[:3]:
+                    texto = self.safe_get_text(div)
+                    if texto and len(texto) > 20:
+                        contexto_parts.append(texto)
+            except Exception as e:
+                logger.debug(f"⚠️ Erro ao extrair parágrafos/divs: {e}")
+            
+            # Combinar contexto
+            if contexto_parts:
+                contexto = " ".join(contexto_parts)
+                
+                # Limpar e limitar tamanho
+                contexto = " ".join(contexto.split())  # Remove espaços extras
+                if len(contexto) > 800:
+                    contexto = contexto[:800] + "..."
+                    
+                logger.info(f"✅ Contexto extraído: {len(contexto)} caracteres")
+                return contexto
+            else:
+                logger.warning("⚠️ Nenhum contexto encontrado")
+                return "Contexto não disponível"
+                
+        except Exception as e:
+            logger.error(f"❌ Erro ao extrair contexto: {e}")
+            return "Contexto não disponível"
 
 class UFMGScraperRobusto(BaseScraperRobusto):
     """Scraper robusto para UFMG - Editais e Chamadas"""
@@ -381,31 +452,7 @@ class FAPEMIGScraperRobusto(BaseScraperRobusto):
             
         return ""
     
-    def _extract_context_around_title(self, titulo_element) -> str:
-        """Extrai contexto ao redor do título para obter mais informações"""
-        try:
-            # Procurar por parágrafo próximo ao título
-            parent = titulo_element.find_element(By.XPATH, "./..")
-            
-            # Procurar por parágrafos próximos
-            paragrafos = parent.find_elements(By.TAG_NAME, "p")
-            if paragrafos:
-                contexto = " ".join([p.text.strip() for p in paragrafos[:3] if p.text.strip()])
-                if contexto:
-                    return contexto
-            
-            # Se não encontrou parágrafos, procurar por divs com texto
-            divs = parent.find_elements(By.TAG_NAME, "div")
-            for div in divs[:3]:
-                texto = div.text.strip()
-                if texto and len(texto) > 20:  # Texto significativo
-                    return texto
-                    
-        except Exception as e:
-            logger.warning(f"⚠️ Erro ao extrair contexto: {e}")
-            
-        return ""
-        
+
     def _eh_url_pdf(self, url: str) -> bool:
         """Verifica se a URL é um PDF"""
         if not url:
@@ -520,44 +567,88 @@ class CNPqScraperRobusto(BaseScraperRobusto):
     
     def __init__(self, driver: webdriver.Chrome):
         super().__init__(driver)
-        self.base_url = "http://memoria2.cnpq.br/web/guest/chamadas-publicas"
+        # Múltiplas URLs com fallback para maior compatibilidade
+        self.base_urls = [
+            "https://www.gov.br/cnpq/pt-br/acesso-a-informacao/acoes-e-programas/programas/chamadas-publicas",
+            "https://www.gov.br/cnpq/pt-br/acesso-a-informacao/acoes-e-programas/programas",
+            "http://memoria2.cnpq.br/web/guest/chamadas-publicas"  # Fallback para URL antiga
+        ]
         
     def extract_chamadas(self) -> List[Dict]:
         """Extrai chamadas do CNPq com funcionalidades robustas"""
         logger.info("🚀 Iniciando extração robusta CNPq...")
         
-        try:
-            self.driver.get(self.base_url)
-            self.random_delay(3, 5)
-            
-            chamadas = []
-            
-            # Extrair chamadas da página principal
-            page_chamadas = self._extract_page_chamadas()
-            chamadas.extend(page_chamadas)
-            
+        chamadas = []
+        
+        # Tentar múltiplas URLs até encontrar chamadas
+        for base_url in self.base_urls:
+            try:
+                logger.info(f"🔍 Tentando URL: {base_url}")
+                self.driver.get(base_url)
+                self.random_delay(3, 5)
+                
+                # Extrair chamadas da página atual
+                page_chamadas = self._extract_page_chamadas()
+                
+                if page_chamadas:
+                    logger.info(f"✅ Encontradas {len(page_chamadas)} chamadas em {base_url}")
+                    chamadas.extend(page_chamadas)
+                    break  # Para se encontrar chamadas
+                else:
+                    logger.info(f"⚠️ Nenhuma chamada encontrada em {base_url}")
+                    
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao acessar {base_url}: {e}")
+                continue  # Tenta próxima URL
+        
+        if chamadas:
             # Tentar expandir detalhes
             chamadas = self._expand_chamadas_details(chamadas)
+            logger.info(f"✅ CNPq: {len(chamadas)} chamadas extraídas no total")
+        else:
+            logger.warning("⚠️ Nenhuma chamada encontrada em URLs principais, tentando alternativas...")
+            # Tentar URLs alternativas como último recurso
+            chamadas = self._try_alternative_urls()
+            if chamadas:
+                chamadas = self._expand_chamadas_details(chamadas)
+                logger.info(f"✅ CNPq: {len(chamadas)} chamadas encontradas em URLs alternativas")
+            else:
+                logger.error("❌ Nenhuma chamada encontrada em nenhuma URL do CNPq")
             
-            logger.info(f"✅ CNPq: {len(chamadas)} chamadas extraídas")
-            return chamadas
-            
-        except Exception as e:
-            logger.error(f"❌ Erro ao extrair CNPq: {e}")
-            return []
+        return chamadas
             
     def _extract_page_chamadas(self) -> List[Dict]:
         """Extrai chamadas da página principal com funcionalidades robustas"""
         chamadas = []
         
         try:
-            # Procurar por títulos de chamadas de forma mais abrangente
-            titulos = self.safe_find_elements(By.XPATH, 
-                '//h4[contains(text(), "CHAMADA") or contains(text(), "Chamada") or contains(text(), "PROGRAMA") or contains(text(), "Programa")]')
+            # ESTRATÉGIA 1: Seletores específicos e abrangentes
+            selectors = [
+                '//h4[contains(text(), "CHAMADA") or contains(text(), "Chamada") or contains(text(), "PROGRAMA") or contains(text(), "Programa")]',
+                '//h3[contains(text(), "CHAMADA") or contains(text(), "Chamada") or contains(text(), "PROGRAMA") or contains(text(), "Programa")]',
+                '//h2[contains(text(), "CHAMADA") or contains(text(), "Chamada") or contains(text(), "PROGRAMA") or contains(text(), "Programa")]',
+                '//h1[contains(text(), "CHAMADA") or contains(text(), "Chamada") or contains(text(), "PROGRAMA") or contains(text(), "Programa")]',
+                '//div[contains(@class, "chamada") or contains(@class, "edital") or contains(@class, "programa")]',
+                '//li[contains(text(), "CHAMADA") or contains(text(), "Chamada") or contains(text(), "PROGRAMA") or contains(text(), "Programa")]',
+                '//a[contains(text(), "CHAMADA") or contains(text(), "Chamada") or contains(text(), "PROGRAMA") or contains(text(), "Programa")]'
+            ]
             
-            # Se não encontrou títulos específicos, procurar por outros elementos
+            titulos = []
+            for selector in selectors:
+                titulos = self.safe_find_elements(By.XPATH, selector)
+                if titulos:
+                    logger.info(f"✅ Seletores funcionando com: {selector}")
+                    break
+            
+            # ESTRATÉGIA 2: Se não encontrou títulos específicos, procurar por outros elementos
             if not titulos:
-                titulos = self.safe_find_elements(By.CSS_SELECTOR, 'h1, h2, h3, h4, h5, h6, .chamada, .programa')
+                titulos = self.safe_find_elements(By.CSS_SELECTOR, 'h1, h2, h3, h4, h5, h6, .chamada, .programa, .edital')
+                logger.info("🔄 Usando seletores CSS genéricos")
+            
+            # ESTRATÉGIA 3: Busca por qualquer elemento com 'CHAMADA' no texto
+            if not titulos:
+                titulos = self.safe_find_elements(By.XPATH, '//*[contains(text(), "CHAMADA") or contains(text(), "Chamada")]')
+                logger.info("🔄 Usando busca genérica por texto")
             
             for titulo in titulos:
                 try:
@@ -646,9 +737,9 @@ class CNPqScraperRobusto(BaseScraperRobusto):
         return "Período não encontrado"
         
     def _find_link_detalhes_near_title(self, titulo_element) -> str:
-        """Encontra link para detalhes próximo ao título"""
+        """Encontra link para detalhes próximo ao título com estratégias robustas"""
         try:
-            # Procurar por link próximo ao título
+            # ESTRATÉGIA 1: Busca no parent e siblings
             parent = titulo_element.find_element(By.XPATH, "./..")
             links = parent.find_elements(By.TAG_NAME, "a")
             
@@ -656,25 +747,47 @@ class CNPqScraperRobusto(BaseScraperRobusto):
                 href = self.safe_get_attribute(link, "href")
                 texto = self.safe_get_text(link)
                 
-                if href and ("chamada" in texto.lower() or "detalhes" in texto.lower() or "pdf" in texto.lower()):
+                if href and ("chamada" in texto.lower() or "detalhes" in texto.lower() or "pdf" in texto.lower() or "edital" in texto.lower()):
+                    logger.info(f"✅ Link encontrado no parent: {texto[:50]}...")
                     return href
                     
-        except:
-            pass
+        except Exception as e:
+            logger.debug(f"⚠️ Estratégia 1 falhou: {e}")
             
-        # Se não encontrou no parent, procurar em toda a página
         try:
+            # ESTRATÉGIA 2: Busca nos siblings (following-sibling)
+            siblings = titulo_element.find_elements(By.XPATH, "following-sibling::*")
+            for sibling in siblings:
+                links = sibling.find_elements(By.TAG_NAME, "a")
+                for link in links:
+                    href = self.safe_get_attribute(link, "href")
+                    texto = self.safe_get_text(link)
+                    
+                    if href and ("chamada" in texto.lower() or "detalhes" in texto.lower() or "pdf" in texto.lower() or "edital" in texto.lower()):
+                        logger.info(f"✅ Link encontrado nos siblings: {texto[:50]}...")
+                        return href
+                        
+        except Exception as e:
+            logger.debug(f"⚠️ Estratégia 2 falhou: {e}")
+            
+        try:
+            # ESTRATÉGIA 3: Busca global na página por links com 'chamada' na URL
             links_globais = self.driver.find_elements(By.TAG_NAME, "a")
             for link in links_globais:
                 href = self.safe_get_attribute(link, "href")
                 texto = self.safe_get_text(link)
                 
-                if href and href.startswith("http") and any(palavra in texto.lower() for palavra in ['chamada', 'detalhes', 'pdf', 'edital']):
-                    return href
-                    
-        except:
-            pass
+                # Verificar se o link contém 'chamada' na URL ou no texto
+                if href and href.startswith("http"):
+                    if any(palavra in texto.lower() for palavra in ['chamada', 'detalhes', 'pdf', 'edital', 'programa']) or \
+                       any(palavra in href.lower() for palavra in ['chamada', 'edital', 'programa']):
+                        logger.info(f"✅ Link encontrado globalmente: {texto[:50]}...")
+                        return href
+                        
+        except Exception as e:
+            logger.debug(f"⚠️ Estratégia 3 falhou: {e}")
             
+        logger.warning("⚠️ Nenhum link encontrado para o título")
         return ""
         
     def _expand_chamadas_details(self, chamadas: List[Dict]) -> List[Dict]:
@@ -740,6 +853,35 @@ class CNPqScraperRobusto(BaseScraperRobusto):
             logger.warning(f"⚠️ Erro ao extrair detalhes CNPq: {e}")
             
         return detalhes
+    
+    def _try_alternative_urls(self) -> List[Dict]:
+        """Tenta URLs alternativas se as principais falharem"""
+        logger.info("🔄 Tentando URLs alternativas do CNPq...")
+        
+        alternative_urls = [
+            "https://www.gov.br/cnpq/pt-br/acesso-a-informacao/acoes-e-programas/programas",
+            "https://www.gov.br/cnpq/pt-br/acesso-a-informacao/acoes-e-programas",
+            "https://www.gov.br/cnpq/pt-br/acesso-a-informacao"
+        ]
+        
+        for alt_url in alternative_urls:
+            try:
+                logger.info(f"🔍 Tentando URL alternativa: {alt_url}")
+                self.driver.get(alt_url)
+                self.random_delay(2, 3)
+                
+                # Tentar extrair chamadas desta URL
+                page_chamadas = self._extract_page_chamadas()
+                if page_chamadas:
+                    logger.info(f"✅ Encontradas {len(page_chamadas)} chamadas em URL alternativa: {alt_url}")
+                    return page_chamadas
+                    
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao acessar URL alternativa {alt_url}: {e}")
+                continue
+        
+        logger.warning("⚠️ Nenhuma URL alternativa funcionou")
+        return []
 
 class ScraperRobustoUnificado:
     """Classe principal robusta que coordena todos os scrapers"""
