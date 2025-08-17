@@ -1,2 +1,5 @@
 selenium>=4.15.0
 chromedriver-autoinstaller>=0.6.0
+requests>=2.31.0
+PyPDF2>=3.0.0
+PyMuPDF>=1.23.0
