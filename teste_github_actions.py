@@ -58,10 +58,9 @@ def testar_importacoes():
     
     bibliotecas = [
         'requests',
-        'beautifulsoup4',
-        'pandas',
         'selenium',
-        'openpyxl'
+        'PyPDF2',
+        'fitz'  # PyMuPDF
     ]
     
     todas_ok = True
