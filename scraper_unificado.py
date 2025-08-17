@@ -84,11 +84,11 @@ class BaseScraper:
         delay = random.uniform(min_seconds, max_seconds)
         time.sleep(delay)
         
-    def download_pdf_if_available(self, url: str, titulo: str) -> str:
-        """Baixa PDF se disponível e retorna o caminho do arquivo"""
+    def download_pdf_if_available(self, url: str, titulo: str) -> tuple:
+        """Baixa PDF se disponível e retorna (caminho_arquivo, url_pdf)"""
         try:
             if not url:
-                return ""
+                return "", ""
                 
             # Verificar se é um arquivo que pode ser baixado
             if not any(ext in url.lower() for ext in ['.pdf', '.doc', '.docx']):
@@ -113,13 +113,13 @@ class BaseScraper:
                 f.write(response.content)
                 
             logger.info(f"✅ PDF baixado: {filename}")
-            return filename
+            return filename, url
             
         except Exception as e:
             logger.warning(f"⚠️ Erro ao baixar PDF {url}: {e}")
-            return ""
+            return "", ""
             
-    def _find_and_download_pdf_from_page(self, url: str, titulo: str) -> str:
+    def _find_and_download_pdf_from_page(self, url: str, titulo: str) -> tuple:
         """Tenta encontrar e baixar PDF de uma página específica"""
         try:
             # Acessar a página para procurar PDFs
@@ -148,10 +148,10 @@ class BaseScraper:
         except Exception as e:
             logger.warning(f"⚠️ Erro ao procurar PDF na página {url}: {e}")
             
-        return ""
+        return "", ""
         
-    def _download_specific_pdf(self, url: str, titulo: str) -> str:
-        """Baixa um PDF específico"""
+    def _download_specific_pdf(self, url: str, titulo: str) -> tuple:
+        """Baixa um PDF específico e retorna (caminho_arquivo, url_pdf)"""
         try:
             # Criar diretório para PDFs se não existir
             pdf_dir = "pdfs_baixados"
@@ -171,11 +171,11 @@ class BaseScraper:
                 f.write(response.content)
                 
             logger.info(f"✅ PDF encontrado e baixado: {filename}")
-            return filename
+            return filename, url
             
         except Exception as e:
             logger.warning(f"⚠️ Erro ao baixar PDF específico {url}: {e}")
-            return ""
+            return "", ""
             
     def extract_pdf_content(self, pdf_path: str) -> Dict:
         """Extrai conteúdo e informações detalhadas de um PDF"""
@@ -375,7 +375,8 @@ class UFMGScraper(BaseScraper):
                         data = self._extract_date_near_link(link)
                         
                         # Tentar baixar PDF se for um link de PDF
-                        pdf_path = self.download_pdf_if_available(href, titulo)
+                        pdf_result = self.download_pdf_if_available(href, titulo)
+                        pdf_path, pdf_url = pdf_result if isinstance(pdf_result, tuple) else (pdf_result, "")
                         
                         # Se PDF foi baixado, extrair conteúdo detalhado
                         pdf_info = {}
@@ -388,6 +389,7 @@ class UFMGScraper(BaseScraper):
                             'data': data,
                             'fonte': 'UFMG',
                             'pdf_baixado': pdf_path,
+                            'pdf_url': pdf_url,
                             'pdf_info': pdf_info,
                             'data_extracao': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         }
@@ -498,7 +500,8 @@ class FAPEMIGScraper(BaseScraper):
                         link = self._find_link_near_title(titulo)
                         
                         # Tentar baixar PDF se for um link de PDF
-                        pdf_path = self.download_pdf_if_available(link, texto)
+                        pdf_result = self.download_pdf_if_available(link, texto)
+                        pdf_path, pdf_url = pdf_result if isinstance(pdf_result, tuple) else (pdf_result, "")
                         
                         # Se PDF foi baixado, extrair conteúdo detalhado
                         pdf_info = {}
@@ -510,6 +513,7 @@ class FAPEMIGScraper(BaseScraper):
                             'url': link,
                             'fonte': 'FAPEMIG',
                             'pdf_baixado': pdf_path,
+                            'pdf_url': pdf_url,
                             'pdf_info': pdf_info,
                             'data_extracao': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         }
@@ -655,7 +659,8 @@ class CNPqScraper(BaseScraper):
                         link_detalhes = self._find_link_detalhes_near_title(titulo)
                         
                         # Tentar baixar PDF se for um link de PDF
-                        pdf_path = self.download_pdf_if_available(link_detalhes, texto)
+                        pdf_result = self.download_pdf_if_available(link_detalhes, texto)
+                        pdf_path, pdf_url = pdf_result if isinstance(pdf_result, tuple) else (pdf_result, "")
                         
                         # Se PDF foi baixado, extrair conteúdo detalhado
                         pdf_info = {}
@@ -668,6 +673,7 @@ class CNPqScraper(BaseScraper):
                             'url_detalhes': link_detalhes,
                             'fonte': 'CNPq',
                             'pdf_baixado': pdf_path,
+                            'pdf_url': pdf_url,
                             'pdf_info': pdf_info,
                             'data_extracao': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         }
@@ -967,8 +973,14 @@ PDFs: {pdfs_cnpq} baixados
                     
             if edital.get('pdf_baixado'):
                 formatted += f"   📄 PDF: Baixado ✅\n"
+                # Adicionar link do PDF se disponível
+                if edital.get('pdf_url'):
+                    formatted += f"   🔗 Link PDF: {edital['pdf_url']}\n"
+                elif edital.get('url') and edital['url'].lower().endswith('.pdf'):
+                    formatted += f"   🔗 Link PDF: {edital['url']}\n"
             elif edital.get('url') and edital['url'].lower().endswith('.pdf'):
                 formatted += f"   📄 PDF: Disponível (não baixado)\n"
+                formatted += f"   🔗 Link PDF: {edital['url']}\n"
             formatted += "\n"
             
         if len(editais) > 5:

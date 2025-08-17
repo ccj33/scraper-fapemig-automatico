@@ -184,6 +184,9 @@ class GeradorResumoCompleto:
             # Informações completas do PDF
             if edital.get('pdf_extraido'):
                 formatted += f"   📄 PDF: ✅ Extraído\n"
+                # Destacar o link do PDF logo após o status
+                if edital.get('pdf_link_direto') and edital['pdf_link_direto'] != 'N/A':
+                    formatted += f"   🔗 Link PDF: {edital['pdf_link_direto']}\n"
                 formatted += f"      🔗 Link Direto: {edital.get('pdf_link_direto', 'N/A')}\n"
                 formatted += f"      🆔 Hash: {edital.get('pdf_hash', 'N/A')[:16]}...\n"
                 formatted += f"      📊 Status: {edital.get('pdf_status_baixa', 'N/A')} / {edital.get('pdf_status_analise', 'N/A')}\n"
@@ -281,6 +284,9 @@ class GeradorResumoCompleto:
             # Informações completas do PDF
             if oportunidade.get('pdf_extraido'):
                 formatted += f"   📄 PDF: ✅ Extraído\n"
+                # Destacar o link do PDF logo após o status
+                if oportunidade.get('pdf_link_direto') and oportunidade['pdf_link_direto'] != 'N/A':
+                    formatted += f"   🔗 Link PDF: {oportunidade['pdf_link_direto']}\n"
                 formatted += f"      🔗 Link Direto: {oportunidade.get('pdf_link_direto', 'N/A')}\n"
                 formatted += f"      🆔 Hash: {oportunidade.get('pdf_hash', 'N/A')[:16]}...\n"
                 formatted += f"      📊 Status: {oportunidade.get('pdf_status_baixa', 'N/A')} / {oportunidade.get('pdf_status_analise', 'N/A')}\n"
@@ -397,6 +403,9 @@ class GeradorResumoCompleto:
             # Informações completas do PDF
             if chamada.get('pdf_extraido'):
                 formatted += f"   📄 PDF: ✅ Extraído\n"
+                # Destacar o link do PDF logo após o status
+                if chamada.get('pdf_link_direto') and chamada['pdf_link_direto'] != 'N/A':
+                    formatted += f"   🔗 Link PDF: {chamada['pdf_link_direto']}\n"
                 formatted += f"      🔗 Link Direto: {chamada.get('pdf_link_direto', 'N/A')}\n"
                 formatted += f"      🆔 Hash: {chamada.get('pdf_hash', 'N/A')[:16]}...\n"
                 formatted += f"      📊 Status: {chamada.get('pdf_status_baixa', 'N/A')} / {chamada.get('pdf_status_analise', 'N/A')}\n"
