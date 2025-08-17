@@ -1,0 +1,76 @@
+
+🚀 RELATÓRIO COMPLETO DE OPORTUNIDADES
+=======================================
+📅 Gerado em: 17/08/2025 às 16:21:14
+🎯 Total de Oportunidades: 0
+
+============================================================
+
+📚 UFMG - EDITAIS E CHAMADAS
+============================================================
+❌ Nenhum edital encontrado
+
+============================================================
+
+🔬 FAPEMIG - OPORTUNIDADES
+============================================================
+❌ Nenhuma oportunidade encontrada
+
+============================================================
+
+📖 CNPq - CHAMADAS PÚBLICAS
+============================================================
+❌ Nenhuma chamada encontrada
+
+============================================================
+
+📄 ANÁLISE DETALHADA DE PDFs EXTRAÍDOS
+============================================================
+❌ Nenhum PDF foi processado
+
+============================================================
+
+📊 RESUMO EXECUTIVO INTELIGENTE
+============================================================
+
+📈 ESTATÍSTICAS GERAIS:
+   • Total de Oportunidades: 0
+   • UFMG: 0 editais
+   • FAPEMIG: 0 oportunidades  
+   • CNPq: 0 chamadas
+   • PDFs extraídos: 0
+   • PDFs com erro: 0
+   • Campos enriquecidos: 0
+
+🎯 PRÓXIMOS PASSOS RECOMENDADOS:
+   • Verificar prazos de inscrição (selecionados automaticamente)
+   • Analisar valores e recursos disponíveis (mais plausíveis identificados)
+   • Identificar oportunidades mais relevantes
+   • Preparar documentação necessária
+   • Acessar PDFs originais via links diretos fornecidos
+
+💡 DICAS IMPORTANTES:
+   • Sempre verifique os links originais fornecidos
+   • Confirme datas e prazos selecionados automaticamente
+   • Prepare documentos com antecedência
+   • Entre em contato em caso de dúvidas
+   • PDFs extraídos fornecem informações complementares completas
+   • Hash SHA256 permite verificar integridade dos documentos
+
+🚀 NOVIDADES DO SISTEMA ROBUSTO:
+   • ✅ Captura automática de links diretos de PDFs
+   • ✅ Download robusto com múltiplos fallbacks
+   • ✅ Extração de texto com OCR quando necessário
+   • ✅ Seleção inteligente de valores mais plausíveis
+   • ✅ Preservação de todas as informações encontradas
+   • ✅ Normalização adequada de dados
+   • ✅ Cálculo de hash para deduplicação
+   • ✅ Tratamento robusto de erros
+        
+
+============================================================
+
+🤖 Sistema automatizado via GitHub Actions
+📧 Enviado automaticamente para: clevioferreira@gmail.com
+⏰ Próxima execução: 18/08/2025 às 05:00 BRT
+        

@@ -41,7 +41,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('scraper_robusto.log'),
+        logging.FileHandler('scraper_robusto.log', encoding='utf-8'),
         logging.StreamHandler()
     ]
 )
@@ -295,46 +295,57 @@ class FAPEMIGScraperRobusto(BaseScraperRobusto):
         titulos_processados = set()  # Para evitar duplicatas
         
         try:
-            # Procurar por títulos de chamadas
-            titulos = self.safe_find_elements(By.CSS_SELECTOR, 'h1, h2, h3, h4, h5, h6')
+            # Procurar por títulos de chamadas de forma mais abrangente
+            titulos = self.safe_find_elements(By.CSS_SELECTOR, 'h1, h2, h3, h4, h5, h6, .chamada, .edital, .oportunidade')
             
             for titulo in titulos:
                 try:
                     texto = self.safe_get_text(titulo)
                     
-                    if texto and any(palavra in texto.lower() for palavra in ['chamada', 'edital', 'oportunidade']):
+                    if texto and any(palavra in texto.lower() for palavra in ['chamada', 'edital', 'oportunidade', 'programa']):
                         # Verificar se já processamos este título
                         if texto in titulos_processados:
                             continue
                         titulos_processados.add(texto)
                         
-                        # Procurar link associado
+                        # Procurar link associado de forma mais robusta
                         link = self._find_link_near_title(titulo)
                         
-                        # Extrair PDF de forma robusta se for um link de PDF
-                        pdf_info = {}
-                        if link and self._eh_url_pdf(link):
-                            logger.info(f"📄 Extraindo PDF robusto FAPEMIG: {texto}")
-                            pdf_info = self.extrair_pdf_robusto(link, texto)
+                        # Se não encontrou link próximo, procurar na página inteira
+                        if not link:
+                            link = self._find_link_by_title_text(texto)
+                        
+                        # Extrair contexto da página para obter mais informações
+                        contexto = self._extract_context_around_title(titulo)
                         
                         chamada = {
                             'titulo': texto,
                             'url': link,
+                            'contexto': contexto,
                             'fonte': 'FAPEMIG',
                             'data_extracao': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             'driver': self.driver  # Para o extrator usar
                         }
                         
-                        # Adicionar informações do PDF se disponível
-                        if pdf_info and 'erro' not in pdf_info:
-                            chamada.update({
-                                'pdf_extraido': True,
-                                'pdf_info': pdf_info
-                            })
+                        # Extrair PDF de forma robusta se for um link de PDF
+                        if link and self._eh_url_pdf(link):
+                            logger.info(f"📄 Extraindo PDF robusto FAPEMIG: {texto}")
+                            pdf_info = self.extrair_pdf_robusto(link, texto)
+                            
+                            if 'erro' not in pdf_info:
+                                chamada.update({
+                                    'pdf_extraido': True,
+                                    'pdf_info': pdf_info
+                                })
+                            else:
+                                chamada.update({
+                                    'pdf_extraido': False,
+                                    'pdf_erro': pdf_info.get('erro', 'Falha na extração')
+                                })
                         else:
                             chamada.update({
                                 'pdf_extraido': False,
-                                'pdf_erro': pdf_info.get('erro', 'Falha na extração')
+                                'pdf_motivo': 'Link não é PDF ou não disponível'
                             })
                         
                         chamadas.append(chamada)
@@ -348,6 +359,53 @@ class FAPEMIGScraperRobusto(BaseScraperRobusto):
             
         return chamadas
     
+    def _find_link_by_title_text(self, titulo_texto: str) -> str:
+        """Encontra link baseado no texto do título"""
+        try:
+            # Procurar por links que contenham palavras do título
+            palavras_chave = [palavra.lower() for palavra in titulo_texto.split() if len(palavra) > 3]
+            
+            links = self.safe_find_elements(By.TAG_NAME, "a")
+            for link in links:
+                href = self.safe_get_attribute(link, "href")
+                texto_link = self.safe_get_text(link)
+                
+                if href and href.startswith("http"):
+                    # Verificar se o link contém palavras-chave do título
+                    for palavra in palavras_chave:
+                        if palavra in texto_link.lower() or palavra in href.lower():
+                            return href
+                            
+        except Exception as e:
+            logger.warning(f"⚠️ Erro ao procurar link por título: {e}")
+            
+        return ""
+    
+    def _extract_context_around_title(self, titulo_element) -> str:
+        """Extrai contexto ao redor do título para obter mais informações"""
+        try:
+            # Procurar por parágrafo próximo ao título
+            parent = titulo_element.find_element(By.XPATH, "./..")
+            
+            # Procurar por parágrafos próximos
+            paragrafos = parent.find_elements(By.TAG_NAME, "p")
+            if paragrafos:
+                contexto = " ".join([p.text.strip() for p in paragrafos[:3] if p.text.strip()])
+                if contexto:
+                    return contexto
+            
+            # Se não encontrou parágrafos, procurar por divs com texto
+            divs = parent.find_elements(By.TAG_NAME, "div")
+            for div in divs[:3]:
+                texto = div.text.strip()
+                if texto and len(texto) > 20:  # Texto significativo
+                    return texto
+                    
+        except Exception as e:
+            logger.warning(f"⚠️ Erro ao extrair contexto: {e}")
+            
+        return ""
+        
     def _eh_url_pdf(self, url: str) -> bool:
         """Verifica se a URL é um PDF"""
         if not url:
@@ -399,8 +457,9 @@ class FAPEMIGScraperRobusto(BaseScraperRobusto):
         
         for chamada in chamadas:
             try:
-                if chamada['url']:
-                    # Tentar acessar página de detalhes
+                if chamada.get('url') and not self._eh_url_pdf(chamada['url']):
+                    # Tentar acessar página de detalhes (apenas se não for PDF direto)
+                    logger.info(f"🔍 Expandindo detalhes FAPEMIG: {chamada.get('titulo', 'Sem título')}")
                     self.driver.get(chamada['url'])
                     self.random_delay(2, 3)
                     
@@ -420,15 +479,36 @@ class FAPEMIGScraperRobusto(BaseScraperRobusto):
         detalhes = {}
         
         try:
-            # Procurar por valores/recursos
-            valor_elements = self.safe_find_elements(By.XPATH, '//*[contains(text(), "R$") or contains(text(), "valor") or contains(text(), "recurso")]')
+            # Procurar por valores/recursos de forma mais abrangente
+            valor_elements = self.safe_find_elements(By.XPATH, 
+                '//*[contains(text(), "R$") or contains(text(), "valor") or contains(text(), "recurso") or contains(text(), "investimento")]')
             if valor_elements:
                 detalhes['valor'] = self.safe_get_text(valor_elements[0])
                 
-            # Procurar por datas
-            data_elements = self.safe_find_elements(By.XPATH, '//*[contains(text(), "data") or contains(text(), "prazo") or contains(text(), "período")]')
+            # Procurar por datas de forma mais abrangente
+            data_elements = self.safe_find_elements(By.XPATH, 
+                '//*[contains(text(), "data") or contains(text(), "prazo") or contains(text(), "período") or contains(text(), "inscrição") or contains(text(), "submissão")]')
             if data_elements:
                 detalhes['prazo'] = self.safe_get_text(data_elements[0])
+            
+            # Procurar por objetivos
+            objetivo_elements = self.safe_find_elements(By.XPATH, 
+                '//*[contains(text(), "objetivo") or contains(text(), "finalidade") or contains(text(), "público")]')
+            if objetivo_elements:
+                detalhes['objetivo'] = self.safe_get_text(objetivo_elements[0])
+            
+            # Procurar por áreas
+            area_elements = self.safe_find_elements(By.XPATH, 
+                '//*[contains(text(), "área") or contains(text(), "campo") or contains(text(), "setor")]')
+            if area_elements:
+                detalhes['area'] = self.safe_get_text(area_elements[0])
+            
+            # Extrair texto da página para análise posterior
+            body_text = self.safe_find_element(By.TAG_NAME, "body")
+            if body_text:
+                texto_pagina = self.safe_get_text(body_text)
+                if texto_pagina:
+                    detalhes['texto_pagina'] = texto_pagina[:2000]  # Primeiros 2000 caracteres
                 
         except Exception as e:
             logger.warning(f"⚠️ Erro ao extrair detalhes FAPEMIG: {e}")
@@ -471,19 +551,27 @@ class CNPqScraperRobusto(BaseScraperRobusto):
         chamadas = []
         
         try:
-            # Procurar por títulos de chamadas
-            titulos = self.safe_find_elements(By.XPATH, '//h4[contains(text(), "CHAMADA") or contains(text(), "Chamada")]')
+            # Procurar por títulos de chamadas de forma mais abrangente
+            titulos = self.safe_find_elements(By.XPATH, 
+                '//h4[contains(text(), "CHAMADA") or contains(text(), "Chamada") or contains(text(), "PROGRAMA") or contains(text(), "Programa")]')
+            
+            # Se não encontrou títulos específicos, procurar por outros elementos
+            if not titulos:
+                titulos = self.safe_find_elements(By.CSS_SELECTOR, 'h1, h2, h3, h4, h5, h6, .chamada, .programa')
             
             for titulo in titulos:
                 try:
                     texto = self.safe_get_text(titulo)
                     
-                    if texto:
+                    if texto and any(palavra in texto.lower() for palavra in ['chamada', 'programa', 'edital', 'bolsa', 'auxílio']):
                         # Procurar período de inscrição
                         periodo = self._find_periodo_near_title(titulo)
                         
                         # Procurar link para detalhes
                         link_detalhes = self._find_link_detalhes_near_title(titulo)
+                        
+                        # Extrair contexto ao redor do título
+                        contexto = self._extract_context_around_title(titulo)
                         
                         # Extrair PDF de forma robusta se for um link de PDF
                         pdf_info = {}
@@ -495,6 +583,7 @@ class CNPqScraperRobusto(BaseScraperRobusto):
                             'titulo': texto,
                             'periodo_inscricao': periodo,
                             'url_detalhes': link_detalhes,
+                            'contexto': contexto,
                             'fonte': 'CNPq',
                             'data_extracao': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             'driver': self.driver  # Para o extrator usar
@@ -509,7 +598,7 @@ class CNPqScraperRobusto(BaseScraperRobusto):
                         else:
                             chamada.update({
                                 'pdf_extraido': False,
-                                'pdf_erro': pdf_info.get('erro', 'Falha na extração')
+                                'pdf_motivo': 'Link não é PDF ou não disponível'
                             })
                         
                         chamadas.append(chamada)
@@ -589,18 +678,19 @@ class CNPqScraperRobusto(BaseScraperRobusto):
         return ""
         
     def _expand_chamadas_details(self, chamadas: List[Dict]) -> List[Dict]:
-        """Tenta expandir detalhes das chamadas"""
+        """Tenta expandir detalhes das chamadas do CNPq"""
         expanded_chamadas = []
         
         for chamada in chamadas:
             try:
-                if chamada['url_detalhes']:
-                    # Tentar acessar página de detalhes
+                if chamada.get('url_detalhes') and not self._eh_url_pdf(chamada['url_detalhes']):
+                    # Tentar acessar página de detalhes (apenas se não for PDF direto)
+                    logger.info(f"🔍 Expandindo detalhes CNPq: {chamada.get('titulo', 'Sem título')}")
                     self.driver.get(chamada['url_detalhes'])
                     self.random_delay(2, 3)
                     
                     # Extrair informações adicionais
-                    detalhes = self._extract_chamada_details()
+                    detalhes = self._extract_cnpq_details()
                     chamada.update(detalhes)
                     
             except Exception as e:
@@ -610,20 +700,41 @@ class CNPqScraperRobusto(BaseScraperRobusto):
             
         return expanded_chamadas
         
-    def _extract_chamada_details(self) -> Dict:
-        """Extrai detalhes de uma chamada específica"""
+    def _extract_cnpq_details(self) -> Dict:
+        """Extrai detalhes de uma chamada específica do CNPq"""
         detalhes = {}
         
         try:
             # Procurar por valores/recursos
-            valor_elements = self.safe_find_elements(By.XPATH, '//*[contains(text(), "R$") or contains(text(), "valor") or contains(text(), "recurso")]')
+            valor_elements = self.safe_find_elements(By.XPATH, 
+                '//*[contains(text(), "R$") or contains(text(), "valor") or contains(text(), "recurso") or contains(text(), "investimento")]')
             if valor_elements:
                 detalhes['valor'] = self.safe_get_text(valor_elements[0])
                 
-            # Procurar por descrição
-            desc_elements = self.safe_find_elements(By.XPATH, '//p[contains(text(), "Objetivo") or contains(text(), "Descrição")]')
-            if desc_elements:
-                detalhes['descricao'] = self.safe_get_text(desc_elements[0])
+            # Procurar por datas de forma mais abrangente
+            data_elements = self.safe_find_elements(By.XPATH, 
+                '//*[contains(text(), "data") or contains(text(), "prazo") or contains(text(), "período") or contains(text(), "inscrição") or contains(text(), "submissão")]')
+            if data_elements:
+                detalhes['prazo'] = self.safe_get_text(data_elements[0])
+            
+            # Procurar por objetivos
+            objetivo_elements = self.safe_find_elements(By.XPATH, 
+                '//*[contains(text(), "objetivo") or contains(text(), "finalidade") or contains(text(), "público") or contains(text(), "destinatário")]')
+            if objetivo_elements:
+                detalhes['objetivo'] = self.safe_get_text(objetivo_elements[0])
+            
+            # Procurar por áreas
+            area_elements = self.safe_find_elements(By.XPATH, 
+                '//*[contains(text(), "área") or contains(text(), "campo") or contains(text(), "setor") or contains(text(), "grande área")]')
+            if area_elements:
+                detalhes['area'] = self.safe_get_text(area_elements[0])
+            
+            # Extrair texto da página para análise posterior
+            body_text = self.safe_find_element(By.TAG_NAME, "body")
+            if body_text:
+                texto_pagina = self.safe_get_text(body_text)
+                if texto_pagina:
+                    detalhes['texto_pagina'] = texto_pagina[:2000]  # Primeiros 2000 caracteres
                 
         except Exception as e:
             logger.warning(f"⚠️ Erro ao extrair detalhes CNPq: {e}")
@@ -743,9 +854,12 @@ class ScraperRobustoUnificado:
     def save_results(self):
         """Salva os resultados em arquivos"""
         try:
+            # Remover campos não serializáveis antes de salvar
+            results_clean = self._clean_results_for_serialization()
+            
             # Salvar JSON completo
             with open("resultados_robustos_completos.json", "w", encoding="utf-8") as f:
-                json.dump(self.results, f, ensure_ascii=False, indent=2)
+                json.dump(results_clean, f, ensure_ascii=False, indent=2)
                 
             # Salvar resumo em texto
             resumo = self.gerar_resumo_completo()
@@ -756,6 +870,19 @@ class ScraperRobustoUnificado:
             
         except Exception as e:
             logger.error(f"❌ Erro ao salvar resultados: {e}")
+    
+    def _clean_results_for_serialization(self) -> Dict:
+        """Remove campos não serializáveis dos resultados"""
+        results_clean = self.results.copy()
+        
+        # Remover campos driver de todos os editais/chamadas
+        for fonte in ['ufmg', 'fapemig', 'cnpq']:
+            if fonte in results_clean:
+                for item in results_clean[fonte]:
+                    if 'driver' in item:
+                        del item['driver']
+        
+        return results_clean
         
     def cleanup(self):
         """Limpa recursos"""

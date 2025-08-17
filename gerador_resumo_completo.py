@@ -260,13 +260,18 @@ class GeradorResumoCompleto:
             formatted += f"🔸 OPORTUNIDADE #{i}\n"
             formatted += f"   📝 Título: {oportunidade.get('titulo', 'Sem título')}\n"
             
+            # Contexto da página (se disponível)
+            if oportunidade.get('contexto'):
+                contexto_formatado = self._formatar_texto_inteligente(oportunidade['contexto'])
+                formatted += f"   📋 Contexto: {contexto_formatado}\n"
+            
             # Valor selecionado (se disponível)
             if oportunidade.get('valor_selecionado'):
                 formatted += f"   💰 Valor Selecionado: {oportunidade['valor_selecionado']}"
                 if oportunidade.get('valor_fonte'):
                     formatted += f" ({oportunidade['valor_fonte']})"
                 formatted += "\n"
-            elif 'valor' in oportunidade and oportunidade['valor'] != "Valor não informado":
+            elif oportunidade.get('valor'):
                 formatted += f"   💰 Valor: {oportunidade['valor']}\n"
             
             # Prazo selecionado (se disponível)
@@ -275,10 +280,18 @@ class GeradorResumoCompleto:
                 if oportunidade.get('prazo_fonte'):
                     formatted += f" ({oportunidade['prazo_fonte']})"
                 formatted += "\n"
-            elif 'prazo' in oportunidade and oportunidade['prazo'] != "Prazo não informado":
+            elif oportunidade.get('prazo'):
                 formatted += f"   ⏰ Prazo: {oportunidade['prazo']}\n"
             
-            if 'url' in oportunidade:
+            # Objetivo (se disponível)
+            if oportunidade.get('objetivo'):
+                formatted += f"   🎯 Objetivo: {oportunidade['objetivo']}\n"
+            
+            # Área (se disponível)
+            if oportunidade.get('area'):
+                formatted += f"   🔬 Área: {oportunidade['area']}\n"
+            
+            if oportunidade.get('url'):
                 formatted += f"   🔗 Link: {oportunidade['url']}\n"
             
             # Informações completas do PDF
@@ -360,13 +373,18 @@ class GeradorResumoCompleto:
             formatted += f"🔸 CHAMADA #{i}\n"
             formatted += f"   📝 Título: {chamada.get('titulo', 'Sem título')}\n"
             
+            # Contexto da página (se disponível)
+            if chamada.get('contexto'):
+                contexto_formatado = self._formatar_texto_inteligente(chamada['contexto'])
+                formatted += f"   📋 Contexto: {contexto_formatado}\n"
+            
             # Período selecionado (se disponível)
             if chamada.get('prazo_selecionado'):
                 formatted += f"   📅 Prazo Selecionado: {chamada['prazo_selecionado']}"
                 if chamada.get('prazo_fonte'):
                     formatted += f" ({chamada['prazo_fonte']})"
                 formatted += "\n"
-            elif 'periodo_inscricao' in chamada and chamada['periodo_inscricao'] != "Período não encontrado":
+            elif chamada.get('periodo_inscricao'):
                 formatted += f"   📅 Período: {chamada['periodo_inscricao']}\n"
             
             # Valor selecionado (se disponível)
@@ -375,7 +393,7 @@ class GeradorResumoCompleto:
                 if chamada.get('valor_fonte'):
                     formatted += f" ({chamada['valor_fonte']})"
                 formatted += "\n"
-            elif 'valor' in chamada and chamada['valor'] != "Valor não informado":
+            elif chamada.get('valor'):
                 formatted += f"   💰 Valor: {chamada['valor']}\n"
             
             # Objetivo selecionado (se disponível)
@@ -385,7 +403,9 @@ class GeradorResumoCompleto:
                 if chamada.get('objetivo_fonte'):
                     formatted += f" ({chamada['objetivo_fonte']})"
                 formatted += "\n"
-            elif 'descricao' in chamada and chamada['descricao'] != "Descrição não informada":
+            elif chamada.get('objetivo'):
+                formatted += f"   🎯 Objetivo: {chamada['objetivo']}\n"
+            elif chamada.get('descricao'):
                 descricao = chamada['descricao']
                 formatted += f"   📖 Descrição: {self._formatar_texto_inteligente(descricao)}\n"
             
@@ -396,8 +416,10 @@ class GeradorResumoCompleto:
                 if chamada.get('area_fonte'):
                     formatted += f" ({chamada['area_fonte']})"
                 formatted += "\n"
+            elif chamada.get('area'):
+                formatted += f"   🔬 Área: {chamada['area']}\n"
             
-            if 'url_detalhes' in chamada:
+            if chamada.get('url_detalhes'):
                 formatted += f"   🔗 Detalhes: {chamada['url_detalhes']}\n"
             
             # Informações completas do PDF
