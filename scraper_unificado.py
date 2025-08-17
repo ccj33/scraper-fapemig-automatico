@@ -28,6 +28,8 @@ import chromedriver_autoinstaller
 import logging
 from typing import List, Dict, Optional, Tuple
 import random
+import requests
+import os
 
 # Configuração de logging
 logging.basicConfig(
@@ -79,6 +81,36 @@ class BaseScraper:
         """Delay aleatório para não sobrecarregar os sites"""
         delay = random.uniform(min_seconds, max_seconds)
         time.sleep(delay)
+        
+    def download_pdf_if_available(self, url: str, titulo: str) -> str:
+        """Baixa PDF se disponível e retorna o caminho do arquivo"""
+        try:
+            if not url or not url.lower().endswith('.pdf'):
+                return ""
+                
+            # Criar diretório para PDFs se não existir
+            pdf_dir = "pdfs_baixados"
+            if not os.path.exists(pdf_dir):
+                os.makedirs(pdf_dir)
+                
+            # Nome do arquivo baseado no título
+            safe_title = "".join(c for c in titulo if c.isalnum() or c in (' ', '-', '_')).rstrip()
+            safe_title = safe_title[:50]  # Limitar tamanho
+            filename = f"{pdf_dir}/{safe_title}.pdf"
+            
+            # Baixar PDF
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+            
+            with open(filename, 'wb') as f:
+                f.write(response.content)
+                
+            logger.info(f"✅ PDF baixado: {filename}")
+            return filename
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Erro ao baixar PDF {url}: {e}")
+            return ""
 
 class UFMGScraper(BaseScraper):
     """Scraper para UFMG - Editais e Chamadas"""
@@ -141,11 +173,15 @@ class UFMGScraper(BaseScraper):
                         # Procurar data próxima ao link
                         data = self._extract_date_near_link(link)
                         
+                        # Tentar baixar PDF se for um link de PDF
+                        pdf_path = self.download_pdf_if_available(href, titulo)
+                        
                         edital = {
                             'titulo': titulo,
                             'url': href,
                             'data': data,
                             'fonte': 'UFMG',
+                            'pdf_baixado': pdf_path,
                             'data_extracao': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         }
                         
@@ -248,10 +284,14 @@ class FAPEMIGScraper(BaseScraper):
                         # Procurar link associado
                         link = self._find_link_near_title(titulo)
                         
+                        # Tentar baixar PDF se for um link de PDF
+                        pdf_path = self.download_pdf_if_available(link, texto)
+                        
                         chamada = {
                             'titulo': texto,
                             'url': link,
                             'fonte': 'FAPEMIG',
+                            'pdf_baixado': pdf_path,
                             'data_extracao': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         }
                         
@@ -375,11 +415,15 @@ class CNPqScraper(BaseScraper):
                         # Procurar link para detalhes
                         link_detalhes = self._find_link_detalhes_near_title(titulo)
                         
+                        # Tentar baixar PDF se for um link de PDF
+                        pdf_path = self.download_pdf_if_available(link_detalhes, texto)
+                        
                         chamada = {
                             'titulo': texto,
                             'periodo_inscricao': periodo,
                             'url_detalhes': link_detalhes,
                             'fonte': 'CNPq',
+                            'pdf_baixado': pdf_path,
                             'data_extracao': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         }
                         
@@ -577,25 +621,35 @@ class ScraperUnificado:
             
     def _generate_summary(self) -> str:
         """Gera resumo em texto dos resultados"""
+        # Contar PDFs baixados
+        pdfs_ufmg = sum(1 for e in self.results['ufmg'] if e.get('pdf_baixado'))
+        pdfs_fapemig = sum(1 for e in self.results['fapemig'] if e.get('pdf_baixado'))
+        pdfs_cnpq = sum(1 for e in self.results['cnpq'] if e.get('pdf_baixado'))
+        total_pdfs = pdfs_ufmg + pdfs_fapemig + pdfs_cnpq
+        
         summary = f"""
 🚀 RESUMO DO SCRAPING UNIFICADO
 ================================
 Data/Hora: {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}
 Total de Oportunidades: {self.results['total_editais']}
+📄 PDFs Baixados: {total_pdfs}
 
 📊 UFMG - Editais e Chamadas
 -----------------------------
 Total: {len(self.results['ufmg'])} editais
+PDFs: {pdfs_ufmg} baixados
 {self._format_editais_list(self.results['ufmg'])}
 
 📊 FAPEMIG - Oportunidades
 ---------------------------
 Total: {len(self.results['fapemig'])} chamadas
+PDFs: {pdfs_fapemig} baixados
 {self._format_editais_list(self.results['fapemig'])}
 
 📊 CNPq - Chamadas Públicas
 ----------------------------
 Total: {len(self.results['cnpq'])} chamadas
+PDFs: {pdfs_cnpq} baixados
 {self._format_editais_list(self.results['cnpq'])}
 
 ---
@@ -633,7 +687,7 @@ def send_email_unified(msg_text: str, subject: str = "🚀 Scraping Unificado - 
         msg = MIMEMultipart()
         msg['Subject'] = subject
         msg['From'] = os.environ['EMAIL_USER']
-        msg['To'] = os.environ['EMAIL_USER']
+        msg['To'] = os.environ.get('EMAIL_DESTINO', 'clevioferreira@gmail.com')
         
         # Corpo do email
         text_part = MIMEText(msg_text, 'plain', 'utf-8')
@@ -643,7 +697,7 @@ def send_email_unified(msg_text: str, subject: str = "🚀 Scraping Unificado - 
             server.login(os.environ['EMAIL_USER'], os.environ['EMAIL_PASS'])
             server.send_message(msg)
             
-        logger.info("✅ Email enviado com sucesso!")
+        logger.info(f"✅ Email enviado com sucesso para {msg['To']}!")
         return True
         
     except Exception as e:

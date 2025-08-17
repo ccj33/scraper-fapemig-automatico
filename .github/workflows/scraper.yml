@@ -50,6 +50,7 @@ jobs:
             resultados_completos.json
             resumo_scraping.txt
             scraper.log
+            pdfs_baixados/
           retention-days: 30
           
       - name: 📊 Resumo da execução
