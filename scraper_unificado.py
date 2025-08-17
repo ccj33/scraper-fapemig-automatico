@@ -932,7 +932,7 @@ PDFs: {pdfs_cnpq} baixados
             if len(titulo) <= 80:
                 formatted += f"{i}. {titulo}\n"
             else:
-                formatted += f"{i}. {titulo[:80]}...\n"
+                formatted += f"{i}. {titulo[:80]}... (📄 Título completo disponível)\n"
             
             # Adicionar informações extras se disponíveis
             if edital.get('data'):
@@ -953,9 +953,17 @@ PDFs: {pdfs_cnpq} baixados
                 if pdf_info.get('valores_encontrados'):
                     formatted += f"   💰 Valores: {', '.join(pdf_info['valores_encontrados'][:2])}\n"
                 if pdf_info.get('objetivo'):
-                    formatted += f"   🎯 Objetivo: {pdf_info['objetivo'][:80]}...\n"
+                    objetivo = pdf_info['objetivo']
+                    if len(objetivo) > 80:
+                        formatted += f"   🎯 Objetivo: {objetivo[:80]}... (📄 Texto completo disponível)\n"
+                    else:
+                        formatted += f"   🎯 Objetivo: {objetivo}\n"
                 if pdf_info.get('area_tema'):
-                    formatted += f"   🔬 Área: {pdf_info['area_tema'][:60]}...\n"
+                    area = pdf_info['area_tema']
+                    if len(area) > 60:
+                        formatted += f"   🔬 Área: {area[:60]}... (📄 Texto completo disponível)\n"
+                    else:
+                        formatted += f"   🔬 Área: {area}\n"
                     
             if edital.get('pdf_baixado'):
                 formatted += f"   📄 PDF: Baixado ✅\n"

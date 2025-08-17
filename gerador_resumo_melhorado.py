@@ -94,10 +94,13 @@ class GeradorResumoMelhorado:
                 formatted += "\n"
                 
             if 'objetivo' in edital and edital['objetivo'] != "Objetivo não informado":
-                formatted += f"   🎯 Objetivo: {edital['objetivo'][:100]}..."
+                objetivo = edital['objetivo']
+                if len(objetivo) > 100:
+                    formatted += f"   🎯 Objetivo: {objetivo[:100]}... (📄 Texto completo disponível no PDF)\n"
+                else:
+                    formatted += f"   🎯 Objetivo: {objetivo}\n"
                 if edital.get('objetivo_fonte') == 'PDF extraído':
-                    formatted += " (📄 Extraído do PDF)"
-                formatted += "\n"
+                    formatted += "      📄 Extraído do PDF\n"
                 
             formatted += f"   🔗 Link: {edital.get('url', 'Não disponível')}\n"
             
@@ -124,19 +127,39 @@ class GeradorResumoMelhorado:
                 
                 # Objetivos encontrados no PDF
                 if edital.get('pdf_objetivo_encontrado'):
-                    formatted += f"      🎯 Objetivo no PDF: {edital['pdf_objetivo_encontrado'][:80]}...\n"
+                    objetivo = edital['pdf_objetivo_encontrado']
+                    if len(objetivo) > 80:
+                        formatted += f"      🎯 Objetivo no PDF: {objetivo[:80]}... (📄 Texto completo disponível)\n"
+                    else:
+                        formatted += f"      🎯 Objetivo no PDF: {objetivo}\n"
                 elif edital.get('pdf_objetivos_encontrados'):
                     objetivos = edital['pdf_objetivos_encontrados']
                     if isinstance(objetivos, list) and objetivos:
-                        formatted += f"      🎯 Objetivos no PDF: {objetivos[0][:80]}...\n"
+                        for i, objetivo in enumerate(objetivos[:3], 1):
+                            if len(objetivo) > 80:
+                                formatted += f"      🎯 Objetivo {i} no PDF: {objetivo[:80]}... (📄 Texto completo disponível)\n"
+                            else:
+                                formatted += f"      🎯 Objetivo {i} no PDF: {objetivo}\n"
+                        if len(objetivos) > 3:
+                            formatted += f"      📄 ... e mais {len(objetivos) - 3} objetivos encontrados\n"
                 
                 # Áreas encontradas no PDF
                 if edital.get('pdf_area_tematica'):
-                    formatted += f"      🔬 Área no PDF: {edital['pdf_area_tematica'][:80]}...\n"
+                    area = edital['pdf_area_tematica']
+                    if len(area) > 80:
+                        formatted += f"      🔬 Área no PDF: {area[:80]}... (📄 Texto completo disponível)\n"
+                    else:
+                        formatted += f"      🔬 Área no PDF: {area}\n"
                 elif edital.get('pdf_areas_encontradas'):
                     areas = edital['pdf_areas_encontradas']
                     if isinstance(areas, list) and areas:
-                        formatted += f"      🔬 Áreas no PDF: {areas[0][:80]}...\n"
+                        for i, area in enumerate(areas[:3], 1):
+                            if len(area) > 80:
+                                formatted += f"      🔬 Área {i} no PDF: {area[:80]}... (📄 Texto completo disponível)\n"
+                            else:
+                                formatted += f"      🔬 Área {i} no PDF: {area}\n"
+                        if len(areas) > 3:
+                            formatted += f"      📄 ... e mais {len(areas) - 3} áreas encontradas\n"
                 
                 # Datas encontradas no PDF
                 if edital.get('pdf_datas_encontradas'):
@@ -203,19 +226,39 @@ class GeradorResumoMelhorado:
                 
                 # Objetivos encontrados no PDF
                 if oportunidade.get('pdf_objetivo_encontrado'):
-                    formatted += f"      🎯 Objetivo no PDF: {oportunidade['pdf_objetivo_encontrado'][:80]}...\n"
+                    objetivo = oportunidade['pdf_objetivo_encontrado']
+                    if len(objetivo) > 80:
+                        formatted += f"      🎯 Objetivo no PDF: {objetivo[:80]}... (📄 Texto completo disponível)\n"
+                    else:
+                        formatted += f"      🎯 Objetivo no PDF: {objetivo}\n"
                 elif oportunidade.get('pdf_objetivos_encontrados'):
                     objetivos = oportunidade['pdf_objetivos_encontrados']
                     if isinstance(objetivos, list) and objetivos:
-                        formatted += f"      🎯 Objetivos no PDF: {objetivos[0][:80]}...\n"
+                        for i, objetivo in enumerate(objetivos[:3], 1):
+                            if len(objetivo) > 80:
+                                formatted += f"      🎯 Objetivo {i} no PDF: {objetivo[:80]}... (📄 Texto completo disponível)\n"
+                            else:
+                                formatted += f"      🎯 Objetivo {i} no PDF: {objetivo}\n"
+                        if len(objetivos) > 3:
+                            formatted += f"      📄 ... e mais {len(objetivos) - 3} objetivos encontrados\n"
                 
                 # Áreas encontradas no PDF
                 if oportunidade.get('pdf_area_tematica'):
-                    formatted += f"      🔬 Área no PDF: {oportunidade['pdf_area_tematica'][:80]}...\n"
+                    area = oportunidade['pdf_area_tematica']
+                    if len(area) > 80:
+                        formatted += f"      🔬 Área no PDF: {area[:80]}... (📄 Texto completo disponível)\n"
+                    else:
+                        formatted += f"      🔬 Área no PDF: {area}\n"
                 elif oportunidade.get('pdf_areas_encontradas'):
                     areas = oportunidade['pdf_areas_encontradas']
                     if isinstance(areas, list) and areas:
-                        formatted += f"      🔬 Áreas no PDF: {areas[0][:80]}...\n"
+                        for i, area in enumerate(areas[:3], 1):
+                            if len(area) > 80:
+                                formatted += f"      🔬 Área {i} no PDF: {area[:80]}... (📄 Texto completo disponível)\n"
+                            else:
+                                formatted += f"      🔬 Área {i} no PDF: {area}\n"
+                        if len(areas) > 3:
+                            formatted += f"      📄 ... e mais {len(areas) - 3} áreas encontradas\n"
                 
                 # Datas encontradas no PDF
                 if oportunidade.get('pdf_datas_encontradas'):
@@ -257,10 +300,13 @@ class GeradorResumoMelhorado:
                 formatted += "\n"
                 
             if 'descricao' in chamada and chamada['descricao'] != "Descrição não informada":
-                formatted += f"   📖 Descrição: {chamada['descricao'][:100]}..."
+                descricao = chamada['descricao']
+                if len(descricao) > 100:
+                    formatted += f"   📖 Descrição: {descricao[:100]}... (📄 Texto completo disponível)\n"
+                else:
+                    formatted += f"   📖 Descrição: {descricao}\n"
                 if chamada.get('descricao_fonte') == 'PDF extraído':
-                    formatted += " (📄 Extraído do PDF)"
-                formatted += "\n"
+                    formatted += "      📄 Extraído do PDF\n"
                 
             if 'url_detalhes' in chamada:
                 formatted += f"   🔗 Detalhes: {chamada['url_detalhes']}\n"
@@ -288,19 +334,39 @@ class GeradorResumoMelhorado:
                 
                 # Objetivos encontrados no PDF
                 if chamada.get('pdf_objetivo_encontrado'):
-                    formatted += f"      🎯 Objetivo no PDF: {chamada['pdf_objetivo_encontrado'][:80]}...\n"
+                    objetivo = chamada['pdf_objetivo_encontrado']
+                    if len(objetivo) > 80:
+                        formatted += f"      🎯 Objetivo no PDF: {objetivo[:80]}... (📄 Texto completo disponível)\n"
+                    else:
+                        formatted += f"      🎯 Objetivo no PDF: {objetivo}\n"
                 elif chamada.get('pdf_objetivos_encontrados'):
                     objetivos = chamada['pdf_objetivos_encontrados']
                     if isinstance(objetivos, list) and objetivos:
-                        formatted += f"      🎯 Objetivos no PDF: {objetivos[0][:80]}...\n"
+                        for i, objetivo in enumerate(objetivos[:3], 1):
+                            if len(objetivo) > 80:
+                                formatted += f"      🎯 Objetivo {i} no PDF: {objetivo[:80]}... (📄 Texto completo disponível)\n"
+                            else:
+                                formatted += f"      🎯 Objetivo {i} no PDF: {objetivo}\n"
+                        if len(objetivos) > 3:
+                            formatted += f"      📄 ... e mais {len(objetivos) - 3} objetivos encontrados\n"
                 
                 # Áreas encontradas no PDF
                 if chamada.get('pdf_area_tematica'):
-                    formatted += f"      🔬 Área no PDF: {chamada['pdf_area_tematica'][:80]}...\n"
+                    area = chamada['pdf_area_tematica']
+                    if len(area) > 80:
+                        formatted += f"      🔬 Área no PDF: {area[:80]}... (📄 Texto completo disponível)\n"
+                    else:
+                        formatted += f"      🔬 Área no PDF: {area}\n"
                 elif chamada.get('pdf_areas_encontradas'):
                     areas = chamada['pdf_areas_encontradas']
                     if isinstance(areas, list) and areas:
-                        formatted += f"      🔬 Áreas no PDF: {areas[0][:80]}...\n"
+                        for i, area in enumerate(areas[:3], 1):
+                            if len(area) > 80:
+                                formatted += f"      🔬 Área {i} no PDF: {area[:80]}... (📄 Texto completo disponível)\n"
+                            else:
+                                formatted += f"      🔬 Área {i} no PDF: {area}\n"
+                        if len(areas) > 3:
+                            formatted += f"      📄 ... e mais {len(areas) - 3} áreas encontradas\n"
                 
                 # Datas encontradas no PDF
                 if chamada.get('pdf_datas_encontradas'):

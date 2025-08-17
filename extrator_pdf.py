@@ -450,11 +450,10 @@ class ExtratorPDF:
         objetivos_unicos = []
         for objetivo in objetivos_encontrados:
             if objetivo not in objetivos_unicos:
-                # Limitar a 300 caracteres
-                objetivo_limitado = objetivo[:300] + "..." if len(objetivo) > 300 else objetivo
-                objetivos_unicos.append(objetivo_limitado)
+                # Preservar texto completo, sem truncar
+                objetivos_unicos.append(objetivo)
         
-        return {'objetivos_encontrados': objetivos_unicos[:3]} if objetivos_unicos else {}
+        return {'objetivos_encontrados': objetivos_unicos[:5]} if objetivos_unicos else {}
     
     def _extrair_areas_melhorado(self, texto: str) -> Dict:
         """Extrai áreas temáticas com padrões mais robustos"""
@@ -499,11 +498,10 @@ class ExtratorPDF:
         areas_unicas = []
         for area in areas_encontradas:
             if area not in areas_unicas:
-                # Limitar a 200 caracteres
-                area_limitada = area[:200] + "..." if len(area) > 200 else area
-                areas_unicas.append(area_limitada)
+                # Preservar texto completo, sem truncar
+                areas_unicas.append(area)
         
-        return {'areas_encontradas': areas_unicas[:3]} if areas_unicas else {}
+        return {'areas_encontradas': areas_unicas[:5]} if areas_unicas else {}
     
     def _detectar_idioma(self, texto: str) -> str:
         """Detecta o idioma do texto"""
