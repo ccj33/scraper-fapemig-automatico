@@ -26,7 +26,7 @@ chamadas_encontradas.json
 pagina_fapemig.txt
 *.json
 *.csv
-*.txt
+# *.txt  # Comentado para não excluir requirements.txt
 
 # Logs
 *.log
