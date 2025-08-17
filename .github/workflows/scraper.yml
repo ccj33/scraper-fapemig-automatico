@@ -36,6 +36,7 @@ jobs:
         env:
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          EMAIL_DESTINO: clevioferreira@gmail.com
         run: python scraper_final_melhorado.py
         
       - name: 📁 Upload arquivos gerados

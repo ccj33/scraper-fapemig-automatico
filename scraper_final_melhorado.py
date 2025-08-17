@@ -3,7 +3,7 @@
 Scraper Final Melhorado - Sistema Completo de Extração
 ======================================================
 
-Versão 3.1 - Corrigido duplicatas e melhorado extração de links
+Versão 3.2 - Configurado para enviar para clevioferreira@gmail.com
 """
 
 import smtplib
@@ -352,12 +352,15 @@ class ScraperFinalMelhorado:
                 pass
 
 def send_email_final(msg_text: str, subject: str = "🚀 RELATÓRIO FINAL - Oportunidades Encontradas!"):
-    """Envia email com o relatório final"""
+    """Envia email com o relatório final para clevioferreira@gmail.com"""
     try:
         msg = MIMEMultipart()
         msg['Subject'] = subject
         msg['From'] = os.environ['EMAIL_USER']
-        msg['To'] = os.environ['EMAIL_USER']
+        
+        # CONFIGURAÇÃO DE EMAIL: Enviar para clevioferreira@gmail.com
+        email_destino = os.environ.get('EMAIL_DESTINO', 'clevioferreira@gmail.com')
+        msg['To'] = email_destino
         
         text_part = MIMEText(msg_text, 'plain', 'utf-8')
         msg.attach(text_part)
@@ -366,7 +369,7 @@ def send_email_final(msg_text: str, subject: str = "🚀 RELATÓRIO FINAL - Opor
             server.login(os.environ['EMAIL_USER'], os.environ['EMAIL_PASS'])
             server.send_message(msg)
             
-        logger.info("✅ Email enviado com sucesso!")
+        logger.info(f"✅ Email enviado com sucesso para: {email_destino}")
         return True
         
     except Exception as e:

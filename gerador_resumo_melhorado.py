@@ -174,7 +174,7 @@ class GeradorResumoMelhorado:
         
     def _get_email_destino(self) -> str:
         """Retorna email de destino"""
-        return "ccjota51@gmail.com"
+        return "clevioferreira@gmail.com"
         
     def _get_proxima_execucao(self) -> str:
         """Calcula próxima execução (amanhã às 05:00 BRT)"""
