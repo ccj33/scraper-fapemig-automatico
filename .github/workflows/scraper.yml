@@ -113,7 +113,7 @@ jobs:
           password: ${{ secrets.SMTP_PASSWORD }}
           subject: "📋 RELATÓRIO DIÁRIO - Oportunidades de Pesquisa e Editais"
           to: clevioferreira@gmail.com
-          from: ${{ secrets.EMAIL_FROM }}
+          from: "Sistema de Scraping <clevioferreira@gmail.com>"
           body: |
             <html>
             <head>
