@@ -1,0 +1,41 @@
+{
+  "chamadas_cnpq": [
+    {
+      "titulo": "CHAMADA ERC- CNPQ - 2025 Nº 13/2025",
+      "descricao": "A presente chamada pública tem por objetivo selecionar propostas para apoio financeiro a projetos que visem contribuir significativamente para o desenvolvimento científico e tecnológico do país.",
+      "data_inscricao": "11/08/2025 a 30/09/2025",
+      "link_permanente": "http://memoria2.cnpq.br/web/guest/chamadas-publicas?p_p_id=resultadosportlet_WAR_resultadoscnpqportlet_INSTANCE_0ZaM&filtro=abertas&detalha=chamadaDivulgada&idDivulgacao=13085",
+      "fonte": "CNPq",
+      "data_coleta": "2025-08-17T19:39:35.334946",
+      "status": "Ativa"
+    },
+    {
+      "titulo": "CHAMADA PÚBLICA CNPq Nº 12/2025 - PROGRAMA INSTITUCIONAL DE BOLSAS DE PÓS-GRADUAÇÃO (PIBPG) - CICLO 2026",
+      "descricao": "A presente chamada pública tem por objetivo selecionar propostas para apoio financeiro a projetos que visem contribuir significativamente para o desenvolvimento científico e tecnológico do país.",
+      "data_inscricao": "04/08/2025 a 17/09/2025",
+      "link_permanente": "http://memoria2.cnpq.br/web/guest/chamadas-publicas?p_p_id=resultadosportlet_WAR_resultadoscnpqportlet_INSTANCE_0ZaM&filtro=abertas&detalha=chamadaDivulgada&idDivulgacao=13065",
+      "fonte": "CNPq",
+      "data_coleta": "2025-08-17T19:39:35.334960",
+      "status": "Ativa"
+    },
+    {
+      "titulo": "Chamada CNPq/SETEC/MCTI N° 06/2025 - Apoio a Eventos de Promoção do Empreendedorismo e da Inovação no Brasil",
+      "descricao": "Apoiar a realização de eventos nacionais e internacionais no Brasil nas áreas de promoção do empreendedorismo e da inovação",
+      "data_inscricao": "04/08/2025 a 18/09/2025",
+      "link_permanente": "http://memoria2.cnpq.br/web/guest/chamadas-publicas?p_p_id=resultadosportlet_WAR_resultadoscnpqportlet_INSTANCE_0ZaM&filtro=abertas&detalha=chamadaDivulgada&idDivulgacao=12905",
+      "fonte": "CNPq",
+      "data_coleta": "2025-08-17T19:39:35.334966",
+      "status": "Ativa"
+    },
+    {
+      "titulo": "CHAMADA PÚBLICA MCTI/CNPq/CSIC Nº 9/2025",
+      "descricao": "Apoiar até 4 projetos conjuntos de pesquisa entre grupos brasileiros e espanhóis, que visem contribuir para o desenvolvimento científico, tecnológico e a inovação do país",
+      "data_inscricao": "17/06/2025 a 12/09/2025",
+      "link_permanente": "",
+      "fonte": "CNPq",
+      "data_coleta": "2025-08-17T19:39:35.334970",
+      "status": "Ativa"
+    }
+  ],
+  "timestamp": "2025-08-17T19:39:33.690652"
+}

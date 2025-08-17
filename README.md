@@ -1,137 +1,130 @@
-# 🚀 Scraper Simples - Editais e Chamadas
+# 🚀 Scraper de Editais e Chamadas - CNPq, FAPEMIG e UFMG
 
-Sistema automatizado para monitorar editais e chamadas da **FAPEMIG** e **CNPq** usando GitHub Actions, executando diariamente e coletando links de PDFs.
+Sistema automatizado para captura de editais, chamadas públicas e oportunidades de fomento das principais agências brasileiras.
 
-## ✨ Funcionalidades
+## 📋 Funcionalidades
 
-- 🤖 **Execução Automática**: Roda todo dia às 05:00 (horário de Brasília)
-- 🕷️ **Scraping Simples**: Coleta apenas links de PDFs e páginas de detalhes
-- 📁 **Artefatos**: Salva dados extraídos como arquivos JSON para download
-- 🔄 **Execução Manual**: Pode ser executado manualmente quando necessário
-- 🎯 **Foco nos Links**: Não baixa PDFs, apenas coleta os links
+### 🔍 Scraper Rápido (`scraper_rapido.py`)
+- **Execução ultra-rápida** para coleta diária
+- **Múltiplas fontes**: CNPq, FAPEMIG e UFMG
+- **Timeouts otimizados** para ambiente CI/CD
+- **Fallback automático** para URLs alternativas
 
-## 🎯 Sites Monitorados
+### 🔍 Scraper Detalhado CNPq (`scraper_cnpq_detalhado.py`)
+- **Extração especializada** para chamadas do CNPq
+- **Informações detalhadas**: datas de inscrição, links permanentes, descrições completas
+- **Padrões inteligentes** para extração de dados estruturados
+- **Dados de exemplo** baseados em chamadas reais
 
-### **FAPEMIG** (Fundação de Amparo à Pesquisa de Minas Gerais)
-- **URL**: http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/
-- **Foco**: Editais e chamadas de pesquisa em Minas Gerais
-
-### **CNPq** (Conselho Nacional de Desenvolvimento Científico e Tecnológico)
-- **URL**: https://www.gov.br/cnpq/pt-br/acesso-a-informacao/acoes-e-programas/programas/chamadas-publicas
-- **Foco**: Chamadas públicas nacionais de pesquisa
-
-## 🛠️ Configuração
-
-### 1. **Preparar o Repositório**
-
-```bash
-# Clone este repositório ou crie um novo
-git init
-git add .
-git commit -m "🚀 Inicializar scraper simples de editais"
-git branch -M main
-git remote add origin https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
-git push -u origin main
-```
-
-### 2. **Dependências**
-
-O sistema usa apenas:
-- **Selenium**: Para navegação web
-- **ChromeDriver**: Gerenciado automaticamente
-
-## 🚀 Como Funciona
-
-### **Execução Automática**
-- ⏰ **Agendamento**: Todo dia às 05:00 (horário de Brasília)
-- 🖥️ **Ambiente**: Ubuntu Linux limpo e atualizado
-- 🐍 **Python**: Versão 3.10 com dependências mínimas
-- 🌐 **Navegador**: Chrome em modo headless (sem interface)
-
-### **Processo de Scraping**
-1. **Inicialização**: Configura ambiente e navegador
-2. **FAPEMIG**: Acessa site e coleta links de editais/chamadas
-3. **CNPq**: Acessa site e coleta links de chamadas públicas
-4. **Processamento**: Organiza dados encontrados
-5. **Artefatos**: Salva dados para download posterior
-
-### **Estratégia de Extração**
-- 🔍 **Links diretos**: Busca por links que terminem em `.pdf`
-- 📋 **Páginas de detalhes**: Coleta links para páginas com informações
-- 🎯 **Filtros inteligentes**: Identifica editais, chamadas e oportunidades
-
-## 📊 Monitoramento
-
-### **Verificar Execuções**
-1. Vá para a aba **Actions** do seu repositório
-2. Clique no workflow **🚀 Scraper Simples - Editais e Chamadas**
-3. Veja o histórico de execuções e logs
-
-### **Execução Manual**
-1. Na aba **Actions**, clique no workflow
-2. Clique em **Run workflow**
-3. Selecione a branch e clique em **Run workflow**
-
-### **Download de Artefatos**
-1. Após cada execução, clique na execução
-2. Role para baixo até **Artifacts**
-3. Baixe `oportunidades-scraper-[número]` para ver os dados extraídos
-
-## 📁 Estrutura dos Arquivos
+## 🏗️ Arquitetura
 
 ```
 meu-scraper/
-├── scraper_simples.py        # Script principal do scraper
-├── requirements.txt           # Dependências Python (mínimas)
-├── .github/
-│   └── workflows/
-│       └── scraper.yml       # Configuração do GitHub Actions
-└── README.md                  # Este arquivo
+├── .github/workflows/
+│   └── scraper.yml          # Workflow automatizado GitHub Actions
+├── scraper_rapido.py        # Scraper principal (rápido)
+├── scraper_cnpq_detalhado.py # Scraper especializado CNPq
+├── scraper_simples.py       # Versão básica
+├── requirements.txt          # Dependências Python
+└── README.md                # Documentação
 ```
 
-## 📋 Formato dos Dados
+## 🚀 Execução Automatizada
 
-### **Arquivo JSON de Saída**
-```json
-{
-  "fapemig": [
-    {
-      "titulo": "Nome da Oportunidade",
-      "link_pdf": "http://exemplo.com/edital.pdf",
-      "fonte": "FAPEMIG",
-      "data_coleta": "2024-01-01T10:00:00"
-    }
-  ],
-  "cnpq": [
-    {
-      "titulo": "Chamada Pública",
-      "link_detalhes": "http://exemplo.com/chamada",
-      "fonte": "CNPq",
-      "data_coleta": "2024-01-01T10:00:00"
-    }
-  ],
-  "timestamp": "2024-01-01T10:00:00"
-}
+### GitHub Actions
+- **Agendamento**: Execução diária às 08:00 UTC (05:00 BRT)
+- **Trigger manual**: Disponível via interface do GitHub
+- **Push automático**: Executa em commits para main/master
+- **Artefatos**: Upload automático dos resultados JSON
+
+### Execução Local
+```bash
+# Scraper rápido
+python scraper_rapido.py
+
+# Scraper detalhado CNPq
+python scraper_cnpq_detalhado.py
 ```
 
-## 🔧 Personalização
+## 📊 Saídas
 
-### **Adicionar Novos Sites**
-Edite `scraper_simples.py` e adicione novos métodos de extração seguindo o padrão existente.
+### Scraper Rápido
+- `editais_rapidos_YYYYMMDD_HHMMSS.json`
+- Estrutura: UFMG, FAPEMIG, CNPq
 
-### **Alterar Horário de Execução**
-Edite `.github/workflows/scraper.yml`:
-```yaml
-schedule:
-  - cron: "0 8 * * *"   # Formato: minuto hora dia mês dia_semana
+### Scraper Detalhado CNPq
+- `chamadas_cnpq_detalhadas_YYYYMMDD_HHMMSS.json`
+- Estrutura detalhada com:
+  - Título da chamada
+  - Descrição completa
+  - Datas de inscrição
+  - Links permanentes
+  - Status e fonte
+
+## 🔧 Configuração
+
+### Dependências
+```bash
+pip install -r requirements.txt
 ```
 
-## 🚨 Limitações
+### Requisitos do Sistema
+- Python 3.10+
+- Chrome/Chromium
+- Selenium WebDriver
 
-- **Não baixa PDFs**: Apenas coleta links
-- **Dependência do Selenium**: Requer Chrome/Chromium
-- **Sites podem mudar**: Estrutura dos sites pode alterar
+## 📈 Monitoramento
+
+### Logs de Execução
+- Timestamps detalhados
+- Contadores de itens extraídos
+- Tratamento de erros robusto
+- Resumos de execução
+
+### Métricas
+- Duração total de execução
+- Quantidade de itens por fonte
+- Taxa de sucesso por URL
+- Fallbacks utilizados
+
+## 🎯 Casos de Uso
+
+### Pesquisadores
+- Acompanhamento de editais de fomento
+- Identificação de oportunidades de bolsas
+- Monitoramento de prazos de inscrição
+
+### Instituições
+- Mapeamento de oportunidades disponíveis
+- Análise de tendências de fomento
+- Planejamento estratégico de captação
+
+### Desenvolvedores
+- Base para sistemas de notificação
+- Integração com CRMs acadêmicos
+- Dashboards de oportunidades
+
+## 🔄 Manutenção
+
+### Atualizações
+- URLs e seletores CSS atualizados automaticamente
+- Fallbacks para mudanças de estrutura
+- Logs detalhados para debugging
+
+### Escalabilidade
+- Limitação de resultados por execução
+- Timeouts configuráveis
+- Tratamento de erros não-bloqueante
 
 ## 📝 Licença
 
-Este projeto é de uso livre para fins educacionais e de pesquisa.
+Projeto desenvolvido para fins educacionais e de pesquisa.
+
+## 🤝 Contribuições
+
+Contribuições são bem-vindas! Por favor, abra uma issue ou pull request.
+
+---
+
+**Última atualização**: Janeiro 2025
+**Versão**: 2.0 - Com scraper detalhado CNPq

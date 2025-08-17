@@ -1,0 +1,72 @@
+{
+  "chamadas_cnpq": [
+    {
+      "id": "13085",
+      "titulo": "CHAMADA ERC- CNPQ - 2025 Nº 13/2025",
+      "descricao": "A presente chamada pública tem por objetivo selecionar propostas para apoio financeiro a projetos que visem contribuir significativamente para o desenvolvimento científico e tecnológico do país. As propostas devem observar as condições específicas estabelecidas na parte II - Regulamento, anexo a esta chamada pública, que determina os requisitos relativos ao proponente, cronograma, recursos financeiros a serem aplicados nas propostas aprovadas, origem dos recursos, itens financiáveis, prazo para execução dos projetos, critérios de elegibilidade, critérios e parâmetros objetivos de julgamento e demais informações necessárias.",
+      "data_inscricao": "11/08/2025 a 30/09/2025",
+      "link_permanente": "http://memoria2.cnpq.br/web/guest/chamadas-publicas?p_p_id=resultadosportlet_WAR_resultadoscnpqportlet_INSTANCE_0ZaM&filtro=abertas&detalha=chamadaDivulgada&idDivulgacao=13085",
+      "fonte": "CNPq",
+      "status": "Ativa",
+      "tipo": "ERC",
+      "ano": "2025",
+      "numero": "13/2025",
+      "categoria": "Desenvolvimento Científico e Tecnológico"
+    },
+    {
+      "id": "13065",
+      "titulo": "CHAMADA PÚBLICA CNPq Nº 12/2025 - PROGRAMA INSTITUCIONAL DE BOLSAS DE PÓS-GRADUAÇÃO (PIBPG) - CICLO 2026",
+      "descricao": "A presente chamada pública tem por objetivo selecionar propostas para apoio financeiro a projetos que visem contribuir significativamente para o desenvolvimento científico e tecnológico do país. As propostas devem observar as condições específicas estabelecidas na parte II - Regulamento, anexo a esta chamada pública, que determina os requisitos relativos ao proponente, cronograma, recursos financeiros a serem aplicados nas propostas aprovadas, origem dos recursos, itens financiáveis, prazo para execução dos projetos, critérios de elegibilidade, critérios e parâmetros objetivos de julgamento e demais informações necessárias.",
+      "data_inscricao": "04/08/2025 a 17/09/2025",
+      "link_permanente": "http://memoria2.cnpq.br/web/guest/chamadas-publicas?p_p_id=resultadosportlet_WAR_resultadoscnpqportlet_INSTANCE_0ZaM&filtro=abertas&detalha=chamadaDivulgada&idDivulgacao=13065",
+      "fonte": "CNPq",
+      "status": "Ativa",
+      "tipo": "PIBPG",
+      "ano": "2025",
+      "numero": "12/2025",
+      "categoria": "Bolsas de Pós-Graduação",
+      "anexos": [
+        "Anexo I",
+        "Anexo II",
+        "FAQ"
+      ]
+    },
+    {
+      "id": "12905",
+      "titulo": "Chamada CNPq/SETEC/MCTI N° 06/2025 - Apoio a Eventos de Promoção do Empreendedorismo e da Inovação no Brasil",
+      "descricao": "Apoiar a realização de eventos nacionais e internacionais no Brasil nas áreas de promoção do empreendedorismo e da inovação",
+      "data_inscricao": "04/08/2025 a 18/09/2025",
+      "link_permanente": "http://memoria2.cnpq.br/web/guest/chamadas-publicas?p_p_id=resultadosportlet_WAR_resultadoscnpqportlet_INSTANCE_0ZaM&filtro=abertas&detalha=chamadaDivulgada&idDivulgacao=12905",
+      "fonte": "CNPq",
+      "status": "Ativa",
+      "tipo": "Eventos",
+      "ano": "2025",
+      "numero": "06/2025",
+      "categoria": "Empreendedorismo e Inovação",
+      "webinar": "https://youtube.com/live/EovJmDmIoDk?feature=share",
+      "resultados": [
+        "Resultado preliminar",
+        "Resultado Final - 1ª Rodada",
+        "Resultado final",
+        "Lista de Verificação dos Critérios de Atendimento e Documentos Obrigatórios"
+      ]
+    },
+    {
+      "id": "12900",
+      "titulo": "CHAMADA PÚBLICA MCTI/CNPq/CSIC Nº 9/2025",
+      "descricao": "Apoiar até 4 projetos conjuntos de pesquisa entre grupos brasileiros e espanhóis, que visem contribuir para o desenvolvimento científico, tecnológico e a inovação do país, por meio da concessão de recursos de bolsas para mobilidade de pesquisadores",
+      "data_inscricao": "17/06/2025 a 12/09/2025",
+      "link_permanente": "",
+      "fonte": "CNPq",
+      "status": "Ativa",
+      "tipo": "Cooperação Internacional",
+      "ano": "2025",
+      "numero": "09/2025",
+      "categoria": "Pesquisa Conjunta Brasil-Espanha",
+      "parceiro": "CSIC (Espanha)",
+      "limite_projetos": 4
+    }
+  ],
+  "estrutura_site": {},
+  "timestamp": "2025-08-17T19:47:27.694036"
+}
