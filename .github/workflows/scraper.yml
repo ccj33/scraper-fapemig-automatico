@@ -1,4 +1,4 @@
-name: 🚀 Scraper Unificado - Editais e Chamadas
+name: 🚀 Scraper Final Melhorado - Editais e Chamadas
 
 on:
   schedule:
@@ -10,7 +10,7 @@ on:
 jobs:
   scraper:
     runs-on: ubuntu-latest
-    name: 🕷️ Executar Scraper Unificado
+    name: 🕷️ Executar Scraper Final Melhorado
     
     steps:
       - name: 📥 Checkout do código
@@ -32,21 +32,21 @@ jobs:
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
         run: python teste_github_actions.py
           
-      - name: 🚀 Executar scraper unificado
+      - name: 🚀 Executar scraper final melhorado
         env:
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
-        run: python scraper_unificado.py
+        run: python scraper_final_melhorado.py
         
       - name: 📁 Upload arquivos gerados
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: dados-scraper-unificado-${{ github.run_number }}
+          name: dados-scraper-final-${{ github.run_number }}
           path: |
-            resultados_completos.json
-            resumo_scraping.txt
-            scraper.log
+            resultados_finais.json
+            relatorio_final.txt
+            scraper_final.log
           retention-days: 30
           
       - name: 📊 Resumo da execução
