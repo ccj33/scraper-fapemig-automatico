@@ -1,0 +1,59 @@
+# Arquivos Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Arquivos de dados gerados pelo scraper
+chamadas_encontradas.json
+pagina_fapemig.txt
+*.json
+*.csv
+*.txt
+
+# Logs
+*.log
+
+# Ambiente virtual
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ChromeDriver (será baixado automaticamente)
+chromedriver*
+*.exe
+
+# Arquivos temporários
+*.tmp
+*.temp
