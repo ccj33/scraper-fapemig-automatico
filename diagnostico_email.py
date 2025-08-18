@@ -7,6 +7,7 @@ Use este script para identificar exatamente o que está faltando
 
 import os
 import sys
+import glob
 
 def verificar_variaveis_ambiente():
     """Verifica todas as variáveis de ambiente relacionadas ao email"""
@@ -154,11 +155,7 @@ def main():
     email_configurado = verificar_variaveis_ambiente()
     
     # Verificar arquivos
-    try:
-        import glob
-        verificar_arquivos_json()
-    except ImportError:
-        print("\n⚠️  Módulo glob não disponível para verificar arquivos")
+    verificar_arquivos_json()
     
     print("\n" + "=" * 60)
     
