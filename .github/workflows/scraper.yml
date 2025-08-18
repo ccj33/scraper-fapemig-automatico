@@ -108,6 +108,22 @@ jobs:
           print(f'📄 CNPq: {len(dados_reorganizados[\"cnpq\"])} com links para PDFs')
           "
           
+      - name: 📧 Enviar email com resultados
+        env:
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_DESTINO: ${{ secrets.EMAIL_DESTINO }}
+        run: |
+          echo "📧 Configurando envio de email..."
+          echo "🔗 Servidor SMTP: ${{ secrets.SMTP_SERVER }}"
+          echo "👤 Usuário: ${{ secrets.EMAIL_USER }}"
+          echo "📬 Destinatário: ${{ secrets.EMAIL_DESTINO }}"
+          
+          python enviar_email_resultados.py
+          
       - name: 📁 Upload arquivos gerados
         uses: actions/upload-artifact@v4
         if: always()
