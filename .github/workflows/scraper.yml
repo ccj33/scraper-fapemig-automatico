@@ -1,38 +1,42 @@
-name: 🚀 Scraper Automatizado com Email
+name: 🚀 Scraper Completo - Editais e Chamadas
 
 on:
   schedule:
-    - cron: '0 8 * * *'  # Executa todos os dias às 8h UTC
-    - cron: '0 12 * * *'  # Executa todos os dias às 12h UTC (9h BRT)
-    - cron: '0 18 * * *'  # Executa todos os dias às 18h UTC (15h BRT)
-  workflow_dispatch:  # Permite execução manual
-  push:  # Executa quando há push no repositório
+    - cron: "0 8 * * *"   # Roda todo dia às 08:00 UTC (05:00 BRT)
+  workflow_dispatch:       # Permite execução manual
+  push:
+    branches: [ main, master ]  # Executa quando há push no repositório
 
 jobs:
   scraper:
     runs-on: ubuntu-latest
+    name: 🕷️ Executar Todos os Scrapers
     
     steps:
-      - name: 📥 Checkout do repositório
+      - name: 📥 Checkout do código
         uses: actions/checkout@v4
-      
+        
       - name: 🐍 Configurar Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
-      
+          python-version: '3.10'
+          
       - name: 📦 Instalar dependências
         run: |
-          pip install selenium chromedriver-autoinstaller requests beautifulsoup4
-      
-      - name: 🔍 Executar scrapers
-        run: |
-          echo "🚀 Executando scrapers..."
-          python scraper_rapido.py
-          python scraper_cnpq_detalhado.py
-          python scraper_cnpq_inteligente.py
-          echo "✅ Scrapers executados com sucesso!"
-      
+          python -m pip install --upgrade pip
+          pip install --upgrade setuptools wheel
+          pip install -r requirements.txt
+          pip list
+          
+      - name: 🚀 Executar scraper rápido (UFMG + FAPEMIG + CNPq)
+        run: python scraper_rapido.py
+        
+      - name: 🔍 Executar scraper detalhado CNPq
+        run: python scraper_cnpq_detalhado.py
+        
+      - name: 🧠 Executar scraper inteligente CNPq
+        run: python scraper_cnpq_inteligente.py
+        
       - name: 🔧 Reorganizar dados para garantir PDFs para todos
         run: |
           python -c "
@@ -103,168 +107,26 @@ jobs:
           print(f'📄 UFMG: {len(dados_reorganizados[\"ufmg\"])} com PDFs diretos')
           print(f'📄 CNPq: {len(dados_reorganizados[\"cnpq\"])} com links para PDFs')
           "
-      
-      - name: 📧 Enviar email com relatório completo
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: ${{ secrets.SMTP_SERVER }}
-          server_port: ${{ secrets.SMTP_PORT }}
-          username: ${{ secrets.SMTP_USERNAME }}
-          password: ${{ secrets.SMTP_PASSWORD }}
-          subject: "📋 RELATÓRIO DIÁRIO - Oportunidades de Pesquisa e Editais"
-          to: ccjota51@gmail.com
-          from: "Sistema de Scraping <ccjota51@gmail.com>"
-          body: |
-            <html>
-            <head>
-              <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center; }
-                .section { margin: 20px 0; padding: 15px; border-left: 4px solid #667eea; background: #f8f9fa; }
-                .opportunity { margin: 10px 0; padding: 10px; background: white; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-                .urgent { border-left: 4px solid #dc3545; background: #fff5f5; }
-                .pdf-link { color: #007bff; text-decoration: none; }
-                .pdf-link:hover { text-decoration: underline; }
-                .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
-                .stat-card { background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-                .footer { text-align: center; margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px; }
-              </style>
-            </head>
-            <body>
-              <div class="header">
-                <h1>🚀 RELATÓRIO DIÁRIO DE OPORTUNIDADES</h1>
-                <p>📅 Data: ${{ github.event.schedule || 'Execução Manual' }}</p>
-                <p>⏰ Horário: ${{ github.run_id }}</p>
-              </div>
-              
-              <div class="section">
-                <h2>📊 RESUMO EXECUTIVO</h2>
-                <div class="stats">
-                  <div class="stat-card">
-                    <h3>🔬 FAPEMIG</h3>
-                    <p style="font-size: 24px; color: #667eea; font-weight: bold;">8</p>
-                    <p>Chamadas Ativas</p>
-                  </div>
-                  <div class="stat-card">
-                    <h3>🎓 UFMG</h3>
-                    <p style="font-size: 24px; color: #28a745; font-weight: bold;">5+</p>
-                    <p>Editais Disponíveis</p>
-                  </div>
-                  <div class="stat-card">
-                    <h3>🔬 CNPq</h3>
-                    <p style="font-size: 24px; color: #ffc107; font-weight: bold;">10+</p>
-                    <p>Chamadas Abertas</p>
-                  </div>
-                  <div class="stat-card">
-                    <h3>📄 PDFs</h3>
-                    <p style="font-size: 24px; color: #dc3545; font-weight: bold;">29+</p>
-                    <p>Documentos para Download</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="section">
-                <h2>⚠️ OPORTUNIDADES URGENTES (COM PRAZO)</h2>
-                
-                <div class="opportunity urgent">
-                  <h3>🔬 CHAMADA FAPEMIG 011/2025 - DEEP TECH</h3>
-                  <p><strong>Prazo:</strong> 02/09/2025 ⚠️</p>
-                  <p><strong>Descrição:</strong> INSERÇÃO NO MERCADO E TRAÇÃO COMERCIAL</p>
-                  <p><strong>PDFs Disponíveis:</strong> 6 arquivos (Chamada Principal, Anexos II-IV, Guia Rápido, Slides)</p>
-                  <p><strong>🔗 Link:</strong> <a href="http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/" class="pdf-link">Acessar Página com PDFs</a></p>
-                  <p><strong>🎥 Vídeos:</strong> <a href="https://youtube.com/playlist" class="pdf-link">Playlist Explicativa</a></p>
-                  <p><strong>🎤 Live:</strong> 08/08/2025 às 15:00 - <a href="https://www.youtube.com/@FapemigOficial" class="pdf-link">Canal FAPEMIG</a></p>
-                </div>
-                
-                <div class="opportunity urgent">
-                  <h3>🔬 CHAMADA 016/2024 - EVENTOS TÉCNICOS</h3>
-                  <p><strong>Prazo:</strong> 30/09/2025 ⚠️</p>
-                  <p><strong>Descrição:</strong> PARTICIPAÇÃO COLETIVA EM EVENTOS TÉCNICOS NO PAÍS - 3ª ENTRADA</p>
-                  <p><strong>PDFs Disponíveis:</strong> 7 arquivos (Chamada, Anexos I-V, Chamada Retificada)</p>
-                  <p><strong>🔗 Link:</strong> <a href="http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/" class="pdf-link">Acessar Página com PDFs</a></p>
-                </div>
-              </div>
-              
-              <div class="section">
-                <h2>📚 TODAS AS OPORTUNIDADES FAPEMIG</h2>
-                
-                <div class="opportunity">
-                  <h3>🔬 CHAMADA 005/2025 - ORGANIZAÇÃO DE EVENTOS</h3>
-                  <p><strong>Prazo:</strong> Sem prazo definido</p>
-                  <p><strong>PDFs Disponíveis:</strong> 6 arquivos (Chamada, Anexos I-IV, Guia Rápido)</p>
-                  <p><strong>🔗 Link:</strong> <a href="http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/" class="pdf-link">Acessar Página com PDFs</a></p>
-                </div>
-                
-                <div class="opportunity">
-                  <h3>📋 PORTARIA 021/2024 - FUNDAÇÕES DE APOIO</h3>
-                  <p><strong>Prazo:</strong> FLUXO CONTÍNUO</p>
-                  <p><strong>PDFs Disponíveis:</strong> 1 arquivo (Portaria Principal)</p>
-                  <p><strong>🔗 Link:</strong> <a href="http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/" class="pdf-link">Acessar Página com PDFs</a></p>
-                </div>
-                
-                <div class="opportunity">
-                  <h3>📋 PORTARIA 020/2024 - CADASTRAMENTO DE INSTITUIÇÕES</h3>
-                  <p><strong>Prazo:</strong> FLUXO CONTÍNUO</p>
-                  <p><strong>PDFs Disponíveis:</strong> 2 arquivos (Portaria + Anexo Único)</p>
-                  <p><strong>🔗 Link:</strong> <a href="http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/" class="pdf-link">Acessar Página com PDFs</a></p>
-                </div>
-                
-                <div class="opportunity">
-                  <h3>🎓 CREDENCIAMENTO BICJR - PORTARIA 051/2023</h3>
-                  <p><strong>Prazo:</strong> FLUXO CONTÍNUO</p>
-                  <p><strong>PDFs Disponíveis:</strong> 1 arquivo (Portaria Principal)</p>
-                  <p><strong>🔗 Link:</strong> <a href="http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/" class="pdf-link">Acessar Página com PDFs</a></p>
-                </div>
-                
-                <div class="opportunity">
-                  <h3>🎓 CREDENCIAMENTO PIBIC - PORTARIA 046/2023</h3>
-                  <p><strong>Prazo:</strong> FLUXO CONTÍNUO</p>
-                  <p><strong>PDFs Disponíveis:</strong> 3 arquivos (Portaria + Anexos I-II)</p>
-                  <p><strong>🔗 Link:</strong> <a href="http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/" class="pdf-link">Acessar Página com PDFs</a></p>
-                </div>
-                
-                <div class="opportunity">
-                  <h3>🎓 CREDENCIAMENTO PCRH - PORTARIA 010/2023</h3>
-                  <p><strong>Prazo:</strong> FLUXO CONTÍNUO</p>
-                  <p><strong>PDFs Disponíveis:</strong> 3 arquivos (Portaria + Anexos I-II)</p>
-                  <p><strong>🔗 Link:</strong> <a href="http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/" class="pdf-link">Acessar Página com PDFs</a></p>
-                </div>
-              </div>
-              
-              <div class="section">
-                <h2>🔗 LINKS IMPORTANTES</h2>
-                <ul>
-                  <li><strong>🏠 FAPEMIG Principal:</strong> <a href="http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/" class="pdf-link">Chamadas e Oportunidades</a></li>
-                  <li><strong>📚 UFMG Editais:</strong> <a href="https://www.ufmg.br/prograd/editais-chamadas/" class="pdf-link">Editais e Chamadas</a></li>
-                  <li><strong>🔬 CNPq Chamadas:</strong> <a href="https://www.cnpq.br/web/guest/chamadas-publicas" class="pdf-link">Chamadas Públicas</a></li>
-                  <li><strong>🎥 Canal FAPEMIG:</strong> <a href="https://www.youtube.com/@FapemigOficial" class="pdf-link">YouTube Oficial</a></li>
-                </ul>
-              </div>
-              
-              <div class="section">
-                <h2>💡 INSTRUÇÕES PARA DOWNLOAD</h2>
-                <ol>
-                  <li><strong>FAPEMIG:</strong> Acesse a página principal e procure pela chamada desejada. Todos os PDFs estão disponíveis para download direto.</li>
-                  <li><strong>UFMG:</strong> Os editais já possuem links diretos para PDFs.</li>
-                  <li><strong>CNPq:</strong> Acesse a página da chamada para encontrar os documentos anexos.</li>
-                </ol>
-              </div>
-              
-              <div class="footer">
-                <p>📧 Este relatório foi gerado automaticamente pelo sistema de scraping</p>
-                <p>🔄 Próxima execução: Amanhã às 8h</p>
-                <p>🔧 Para dúvidas ou suporte, entre em contato</p>
-                <p style="color: #666; font-size: 12px;">© 2025 Sistema de Monitoramento de Oportunidades</p>
-              </div>
-            </body>
-            </html>
-
-      
-      - name: 📤 Upload dos artefatos
+          
+      - name: 📁 Upload arquivos gerados
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: dados-scrapers-${{ github.run_id }}
+          name: oportunidades-scraper-completo-${{ github.run_number }}
           path: |
-            *.json
+            oportunidades_*.json
+            editais_rapidos_*.json
+            chamadas_cnpq_detalhadas_*.json
+            chamadas_cnpq_inteligentes_*.json
             dados_reorganizados_com_pdfs_*.json
-            fapemig_dados_reais_*.json
+          retention-days: 30
+          
+      - name: 📊 Resumo da execução
+        if: always()
+        run: |
+          echo "=== RESUMO DA EXECUÇÃO COMPLETA ==="
+          echo "Data/Hora: $(date)"
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Workflow: ${{ github.workflow }}"
+          echo "================================"
