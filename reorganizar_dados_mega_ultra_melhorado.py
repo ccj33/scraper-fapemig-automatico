@@ -1,271 +1,326 @@
 #!/usr/bin/env python3
 """
-🔧 SCRIPT MEGA-ULTRA-MELHORADO PARA REORGANIZAR DADOS
-=====================================================
+🔧 REORGANIZAÇÃO MEGA-ULTRA-MELHORADA DOS DADOS - SOLUÇÃO DEFINITIVA
+=====================================================================
 
-Reorganiza os dados dos scrapers para garantir que
-TODOS os editais tenham:
-✅ Nomes REAIS dos PDFs
-✅ Links DIRETOS dos PDFs
-✅ Todas as informações detalhadas
-✅ Nenhum dado perdido
+Versão que resolve TODOS os problemas de reorganização:
+✅ Processa dados da FAPEMIG com SOLUÇÃO DEFINITIVA
+✅ Processa dados do CNPq com SOLUÇÃO DEFINITIVA
+✅ Inclui TODOS os nomes REAIS dos PDFs
+✅ Inclui TODOS os links DIRETOS dos PDFs
+✅ Reorganiza dados com estrutura MEGA-ULTRA-MELHORADA
+✅ Gera arquivo final com SOLUÇÃO DEFINITIVA COMPLETA
 """
 
 import json
 import glob
+import os
 from datetime import datetime
 
-def reorganizar_dados_mega_ultra_melhorado():
-    """Reorganiza os dados com SOLUÇÃO DEFINITIVA para todos"""
-    print("🔧 Reorganizando dados com SOLUÇÃO DEFINITIVA...")
+class ReorganizadorDadosSolucaoDefinitiva:
+    def __init__(self):
+        self.dados_finais = {
+            'fapemig': [],
+            'cnpq': [],
+            'ufmg': [],
+            'timestamp': datetime.now().isoformat(),
+            'total_editais': 0,
+            'total_pdfs': 0,
+            'solucao_definitiva': True
+        }
+        
+    def encontrar_arquivos_solucao_definitiva(self):
+        """Encontra arquivos da SOLUÇÃO DEFINITIVA"""
+        print("🔍 Procurando arquivos da SOLUÇÃO DEFINITIVA...")
+        
+        # Buscar arquivos da FAPEMIG
+        arquivos_fapemig = glob.glob("fapemig_solucao_definitiva_*.json")
+        if arquivos_fapemig:
+            arquivo_fapemig = max(arquivos_fapemig, key=lambda x: os.path.getctime(x))
+            print(f"✅ FAPEMIG: {arquivo_fapemig}")
+        else:
+            print("❌ Arquivo da FAPEMIG não encontrado")
+            arquivo_fapemig = None
+        
+        # Buscar arquivos do CNPq
+        arquivos_cnpq = glob.glob("cnpq_solucao_definitiva_*.json")
+        if arquivos_cnpq:
+            arquivo_cnpq = max(arquivos_cnpq, key=lambda x: os.path.getctime(x))
+            print(f"✅ CNPq: {arquivo_cnpq}")
+        else:
+            print("❌ Arquivo do CNPq não encontrado")
+            arquivo_cnpq = None
+        
+        # Buscar arquivos da UFMG (se existirem)
+        arquivos_ufmg = glob.glob("*ufmg*.json")
+        if arquivos_ufmg:
+            arquivo_ufmg = max(arquivos_ufmg, key=lambda x: os.path.getctime(x))
+            print(f"✅ UFMG: {arquivo_ufmg}")
+        else:
+            print("⚠️ Arquivo da UFMG não encontrado")
+            arquivo_ufmg = None
+        
+        return arquivo_fapemig, arquivo_cnpq, arquivo_ufmg
     
-    # Carregar dados dos scrapers
-    editais_rapidos = glob.glob('editais_rapidos_*.json')
-    chamadas_detalhadas = glob.glob('chamadas_cnpq_detalhadas_*.json')
-    chamadas_inteligentes = glob.glob('chamadas_cnpq_inteligentes_*.json')
-    fapemig_solucao_definitiva = glob.glob('fapemig_solucao_definitiva_*.json')
-    
-    # Dados reorganizados com SOLUÇÃO DEFINITIVA
-    dados_reorganizados = {
-        'fapemig': [],
-        'ufmg': [],
-        'cnpq': [],
-        'timestamp': datetime.now().isoformat(),
-        'status': 'Reorganizado com SOLUÇÃO DEFINITIVA - TODOS os nomes e links dos PDFs'
-    }
-    
-    # 🔥 FAPEMIG - SOLUÇÃO DEFINITIVA com TODOS os nomes e links dos PDFs
-    if fapemig_solucao_definitiva:
-        print(f"📄 Carregando dados da FAPEMIG com SOLUÇÃO DEFINITIVA de: {fapemig_solucao_definitiva[-1]}")
-        with open(fapemig_solucao_definitiva[-1], 'r', encoding='utf-8') as f:
-            dados = json.load(f)
-            for item in dados.get('fapemig', []):
-                # 🔥 INCLUIR TODOS OS NOMES E LINKS DOS PDFs
-                pdfs_completos = []
-                
-                # Adicionar PDFs disponíveis se existirem
-                if 'pdfs_disponiveis' in item and item['pdfs_disponiveis']:
-                    for pdf in item['pdfs_disponiveis']:
-                        pdfs_completos.append({
-                            'nome': pdf.get('nome', 'PDF da FAPEMIG'),
-                            'url': pdf.get('url', 'http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/'),
-                            'tipo': pdf.get('tipo', 'PDF'),
-                            'metodo': pdf.get('metodo', 'Extraído pelo Scraper'),
-                            'instrucoes': pdf.get('instrucoes', 'Acesse a página para download direto')
-                        })
-                
-                # Se não tem PDFs, criar link genérico mas informativo
-                if not pdfs_completos:
-                    pdfs_completos.append({
-                        'nome': f"Edital {item.get('numero', 'FAPEMIG')} - Acesso Completo",
-                        'url': 'http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/',
-                        'tipo': 'Página com PDFs',
-                        'metodo': 'Link Principal',
-                        'instrucoes': 'Acesse a página para encontrar TODOS os PDFs deste edital'
-                    })
-                
-                # Criar item reorganizado com TODAS as informações
-                item_reorganizado = {
-                    'titulo': item.get('titulo', 'Edital FAPEMIG'),
-                    'descricao': item.get('descricao', item.get('titulo', 'Edital FAPEMIG')),
-                    'numero': item.get('numero', ''),
-                    'data_inclusao': item.get('data_inclusao', ''),
-                    'prazo_final': item.get('prazo_final', ''),
-                    'fonte': 'FAPEMIG',
-                    'data_coleta': item.get('data_coleta', datetime.now().isoformat()),
-                    'tem_anexos': item.get('tem_anexos', True),
-                    'total_pdfs': len(pdfs_completos),
-                    'pdfs_disponiveis': pdfs_completos,
-                    'links_video': item.get('links_video', []),
-                    'texto_completo': item.get('texto_completo', ''),
-                    'link_principal': 'http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/',
-                    'link_alternativo': 'http://www.fapemig.br/pt/editais/',
-                    'tipo_link': 'SOLUÇÃO DEFINITIVA - PDFs Completos',
-                    'instrucoes': 'TODOS os nomes e links dos PDFs incluídos!'
-                }
-                
-                dados_reorganizados['fapemig'].append(item_reorganizado)
-                print(f"   ✅ FAPEMIG: {item_reorganizado['titulo'][:50]}... - {len(pdfs_completos)} PDFs")
-    
-    # Se não tem solução definitiva, usar dados antigos mas melhorados
-    elif editais_rapidos:
-        print(f"📄 Carregando dados da FAPEMIG de: {editais_rapidos[-1]} (versão melhorada)")
-        with open(editais_rapidos[-1], 'r', encoding='utf-8') as f:
-            dados = json.load(f)
-            for item in dados.get('fapemig', []):
-                # Criar PDFs informativos mesmo sem dados completos
-                pdfs_informativos = [
-                    {
-                        'nome': f"Edital {item.get('numero', 'FAPEMIG')} - Acesso Completo",
-                        'url': 'http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/',
-                        'tipo': 'Página com PDFs',
-                        'metodo': 'Link Principal',
-                        'instrucoes': 'Acesse a página para encontrar TODOS os PDFs deste edital'
-                    },
-                    {
-                        'nome': f"Edital {item.get('numero', 'FAPEMIG')} - Página Alternativa",
-                        'url': 'http://www.fapemig.br/pt/editais/',
-                        'tipo': 'Página Alternativa',
-                        'metodo': 'Link Secundário',
-                        'instrucoes': 'Página alternativa com editais da FAPEMIG'
+    def processar_fapemig_solucao_definitiva(self, arquivo):
+        """Processa dados da FAPEMIG com SOLUÇÃO DEFINITIVA"""
+        print("\n🔥 Processando FAPEMIG com SOLUÇÃO DEFINITIVA...")
+        
+        try:
+            with open(arquivo, 'r', encoding='utf-8') as f:
+                dados = json.load(f)
+            
+            editais_processados = 0
+            pdfs_encontrados = 0
+            
+            for edital in dados.get('editais_fapemig', []):
+                try:
+                    # Extrair informações MEGA-ULTRA-MELHORADAS
+                    edital_processado = {
+                        'fonte': 'FAPEMIG',
+                        'titulo': edital.get('titulo', ''),
+                        'numero': edital.get('numero', ''),
+                        'data_inclusao': edital.get('data_inclusao', ''),
+                        'prazo_final': edital.get('prazo_final', ''),
+                        'descricao': edital.get('descricao', ''),
+                        'total_pdfs': edital.get('total_pdfs', 0),
+                        'pdfs_disponiveis': [],
+                        'links_importantes': edital.get('links_importantes', []),
+                        'data_coleta': edital.get('data_coleta', ''),
+                        'solucao_definitiva': True
                     }
-                ]
-                
-                item_reorganizado = {
-                    'titulo': item.get('titulo', 'Edital FAPEMIG'),
-                    'descricao': item.get('descricao', item.get('titulo', 'Edital FAPEMIG')),
-                    'numero': item.get('numero', ''),
-                    'data_inclusao': item.get('data_inclusao', ''),
-                    'prazo_final': item.get('prazo_final', ''),
-                    'fonte': 'FAPEMIG',
-                    'data_coleta': item.get('data_coleta', datetime.now().isoformat()),
-                    'tem_anexos': True,
-                    'total_pdfs': len(pdfs_informativos),
-                    'pdfs_disponiveis': pdfs_informativos,
-                    'links_video': [],
-                    'texto_completo': item.get('texto_completo', ''),
-                    'link_principal': 'http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/',
-                    'link_alternativo': 'http://www.fapemig.br/pt/editais/',
-                    'tipo_link': 'Links Informativos - PDFs Disponíveis',
-                    'instrucoes': 'Acesse as páginas para encontrar os PDFs dos editais'
-                }
-                
-                dados_reorganizados['fapemig'].append(item_reorganizado)
-                print(f"   ✅ FAPEMIG: {item_reorganizado['titulo'][:50]}... - {len(pdfs_informativos)} links")
+                    
+                    # 🔥 PROCESSAMENTO MEGA-ULTRA-MELHORADO DOS PDFs
+                    pdfs = edital.get('pdfs_disponiveis', [])
+                    for pdf in pdfs:
+                        pdf_processado = {
+                            'nome': pdf.get('nome', ''),
+                            'url': pdf.get('url', ''),
+                            'tipo': pdf.get('tipo', ''),
+                            'instrucoes': pdf.get('instrucoes', ''),
+                            'metodo_extracao': pdf.get('metodo', ''),
+                            'solucao_definitiva': True
+                        }
+                        edital_processado['pdfs_disponiveis'].append(pdf_processado)
+                        pdfs_encontrados += 1
+                    
+                    # Adicionar à lista final
+                    self.dados_finais['fapemig'].append(edital_processado)
+                    editais_processados += 1
+                    
+                    print(f"   ✅ Edital processado: {edital_processado['titulo'][:50]}...")
+                    print(f"      📄 PDFs encontrados: {len(edital_processado['pdfs_disponiveis'])}")
+                    
+                except Exception as e:
+                    print(f"   ❌ Erro ao processar edital: {e}")
+                    continue
+            
+            print(f"✅ FAPEMIG: {editais_processados} editais processados, {pdfs_encontrados} PDFs encontrados")
+            return editais_processados, pdfs_encontrados
+            
+        except Exception as e:
+            print(f"❌ Erro ao processar FAPEMIG: {e}")
+            return 0, 0
     
-    # UFMG - Manter PDFs existentes e melhorar
-    if editais_rapidos:
-        print(f"📄 Carregando dados da UFMG de: {editais_rapidos[-1]}")
-        with open(editais_rapidos[-1], 'r', encoding='utf-8') as f:
-            dados = json.load(f)
-            for item in dados.get('ufmg', []):
-                if not item.get('link_pdf'):
-                    item['link_pdf'] = 'https://www.ufmg.br/prograd/editais-chamadas/'
-                    item['tipo_link'] = 'Página com PDFs'
-                else:
-                    item['tipo_link'] = 'PDF Direto'
-                
-                # Adicionar informações extras
-                item['total_pdfs'] = 1
-                item['pdfs_disponiveis'] = [{
-                    'nome': item.get('titulo', 'Edital UFMG'),
-                    'url': item.get('link_pdf', 'https://www.ufmg.br/prograd/editais-chamadas/'),
-                    'tipo': 'PDF Direto' if item.get('link_pdf', '').endswith('.pdf') else 'Página com PDF',
-                    'metodo': 'Extraído pelo Scraper',
-                    'instrucoes': 'PDF disponível para download direto'
-                }]
-                
-                dados_reorganizados['ufmg'].append(item)
-    
-    # CNPq - Adicionar links que levam a PDFs
-    if chamadas_detalhadas:
-        print(f"📄 Carregando dados do CNPq de: {chamadas_detalhadas[-1]}")
-        with open(chamadas_detalhadas[-1], 'r', encoding='utf-8') as f:
-            dados = json.load(f)
-            for item in dados.get('chamadas_cnpq', []):
-                if not item.get('link_pdf'):
-                    item['link_pdf'] = item.get('link_permanente', 'https://www.cnpq.br/web/guest/chamadas-publicas')
-                
-                item['tipo_link'] = 'Página com PDFs'
-                item['instrucoes'] = 'Acesse a página para encontrar os PDFs dos editais'
-                item['total_pdfs'] = 1
-                item['pdfs_disponiveis'] = [{
-                    'nome': item.get('titulo', 'Chamada CNPq'),
-                    'url': item.get('link_pdf', 'https://www.cnpq.br/web/guest/chamadas-publicas'),
-                    'tipo': 'Página com PDFs',
-                    'metodo': 'Link Permanente',
-                    'instrucoes': 'Acesse a página para encontrar os PDFs dos editais'
-                }]
-                
-                dados_reorganizados['cnpq'].append(item)
-    
-    # Salvar dados reorganizados com SOLUÇÃO DEFINITIVA
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    nome_arquivo = f'dados_reorganizados_solucao_definitiva_{timestamp}.json'
-    
-    with open(nome_arquivo, 'w', encoding='utf-8') as f:
-        json.dump(dados_reorganizados, f, ensure_ascii=False, indent=2)
-    
-    print(f"✅ Dados reorganizados com SOLUÇÃO DEFINITIVA salvos em: {nome_arquivo}")
-    print(f"📊 Total de oportunidades: {sum(len(v) for v in dados_reorganizados.values() if isinstance(v, list))}")
-    print(f"📄 FAPEMIG: {len(dados_reorganizados['fapemig'])} com SOLUÇÃO DEFINITIVA")
-    print(f"📄 UFMG: {len(dados_reorganizados['ufmg'])} com PDFs diretos")
-    print(f"📄 CNPq: {len(dados_reorganizados['cnpq'])} com links para PDFs")
-    
-    return dados_reorganizados
-
-def mostrar_relatorio_solucao_definitiva(dados):
-    """Mostra relatório completo com SOLUÇÃO DEFINITIVA"""
-    print("\n" + "="*80)
-    print("📋 RELATÓRIO COMPLETO - SOLUÇÃO DEFINITIVA - TODOS OS EDITAIS COM PDFs")
-    print("="*80)
-    
-    # FAPEMIG - SOLUÇÃO DEFINITIVA
-    print(f"\n🔬 FAPEMIG - {len(dados['fapemig'])} OPORTUNIDADES (SOLUÇÃO DEFINITIVA)")
-    print("-" * 70)
-    for i, item in enumerate(dados['fapemig'], 1):
-        print(f"{i}. {item['titulo']}")
-        print(f"   📊 Número: {item['numero']}")
-        print(f"   📅 Data Inclusão: {item['data_inclusao']}")
-        print(f"   ⏰ Prazo Final: {item['prazo_final']}")
-        print(f"   📄 Total PDFs: {item['total_pdfs']}")
+    def processar_cnpq_solucao_definitiva(self, arquivo):
+        """Processa dados do CNPq com SOLUÇÃO DEFINITIVA"""
+        print("\n🔥 Processando CNPq com SOLUÇÃO DEFINITIVA...")
         
-        # Mostrar TODOS os PDFs disponíveis
-        for j, pdf in enumerate(item['pdfs_disponiveis'], 1):
-            print(f"      {j}. {pdf['nome']}")
-            print(f"         🔗 URL: {pdf['url']}")
-            print(f"         📝 Tipo: {pdf['tipo']}")
-            print(f"         💡 Instruções: {pdf['instrucoes']}")
-        
-        print(f"   🔗 Link Principal: {item['link_principal']}")
-        print(f"   🔗 Link Alternativo: {item['link_alternativo']}")
-        print(f"   📝 Tipo: {item['tipo_link']}")
-        print(f"   💡 Instruções: {item['instrucoes']}")
-        print()
+        try:
+            with open(arquivo, 'r', encoding='utf-8') as f:
+                dados = json.load(f)
+            
+            chamadas_processadas = 0
+            links_encontrados = 0
+            
+            for chamada in dados.get('chamadas_cnpq', []):
+                try:
+                    # Extrair informações MEGA-ULTRA-MELHORADAS
+                    chamada_processada = {
+                        'fonte': 'CNPq',
+                        'titulo': chamada.get('titulo', ''),
+                        'numero': chamada.get('numero', ''),
+                        'id': chamada.get('id', ''),
+                        'descricao': chamada.get('descricao', ''),
+                        'periodo_inscricao': chamada.get('periodo_inscricao', ''),
+                        'total_links': chamada.get('total_links', 0),
+                        'links_importantes': [],
+                        'data_coleta': chamada.get('data_coleta', ''),
+                        'texto_completo': chamada.get('texto_completo', ''),
+                        'solucao_definitiva': True
+                    }
+                    
+                    # 🔥 PROCESSAMENTO MEGA-ULTRA-MELHORADO DOS LINKS
+                    links = chamada.get('links_importantes', [])
+                    for link in links:
+                        link_processado = {
+                            'texto': link.get('texto', ''),
+                            'url': link.get('url', ''),
+                            'tipo': link.get('tipo', ''),
+                            'metodo': link.get('metodo', ''),
+                            'solucao_definitiva': True
+                        }
+                        chamada_processada['links_importantes'].append(link_processado)
+                        links_encontrados += 1
+                    
+                    # Adicionar à lista final
+                    self.dados_finais['cnpq'].append(chamada_processada)
+                    chamadas_processadas += 1
+                    
+                    print(f"   ✅ Chamada processada: {chamada_processada['titulo'][:50]}...")
+                    print(f"      🔗 Links encontrados: {len(chamada_processada['links_importantes'])}")
+                    
+                except Exception as e:
+                    print(f"   ❌ Erro ao processar chamada: {e}")
+                    continue
+            
+            print(f"✅ CNPq: {chamadas_processadas} chamadas processadas, {links_encontrados} links encontrados")
+            return chamadas_processadas, links_encontrados
+            
+        except Exception as e:
+            print(f"❌ Erro ao processar CNPq: {e}")
+            return 0, 0
     
-    # UFMG
-    print(f"\n🏫 UFMG - {len(dados['ufmg'])} EDITAIS")
-    print("-" * 50)
-    for i, item in enumerate(dados['ufmg'], 1):
-        print(f"{i}. {item['titulo']}")
-        print(f"   📄 PDF: {item['pdfs_disponiveis'][0]['nome']}")
-        print(f"   🔗 Link: {item['pdfs_disponiveis'][0]['url']}")
-        print(f"   📝 Tipo: {item['tipo_link']}")
-        print()
+    def processar_ufmg(self, arquivo):
+        """Processa dados da UFMG (se existirem)"""
+        if not arquivo:
+            print("\n⚠️ UFMG: Nenhum arquivo encontrado para processar")
+            return 0, 0
+        
+        print("\n🏫 Processando UFMG...")
+        
+        try:
+            with open(arquivo, 'r', encoding='utf-8') as f:
+                dados = json.load(f)
+            
+            editais_processados = 0
+            pdfs_encontrados = 0
+            
+            # Processar editais da UFMG (estrutura pode variar)
+            editais = dados.get('editais_ufmg', dados.get('ufmg', []))
+            
+            for edital in editais:
+                try:
+                    edital_processado = {
+                        'fonte': 'UFMG',
+                        'titulo': edital.get('titulo', ''),
+                        'numero': edital.get('numero', ''),
+                        'data': edital.get('data', ''),
+                        'descricao': edital.get('descricao', ''),
+                        'link_pdf': edital.get('link_pdf', ''),
+                        'link_alternativo': edital.get('link_alternativo', ''),
+                        'data_coleta': edital.get('data_coleta', ''),
+                        'solucao_definitiva': True
+                    }
+                    
+                    self.dados_finais['ufmg'].append(edital_processado)
+                    editais_processados += 1
+                    
+                    if edital_processado['link_pdf'] or edital_processado['link_alternativo']:
+                        pdfs_encontrados += 1
+                    
+                except Exception as e:
+                    print(f"   ❌ Erro ao processar edital UFMG: {e}")
+                    continue
+            
+            print(f"✅ UFMG: {editais_processados} editais processados, {pdfs_encontrados} PDFs encontrados")
+            return editais_processados, pdfs_encontrados
+            
+        except Exception as e:
+            print(f"❌ Erro ao processar UFMG: {e}")
+            return 0, 0
     
-    # CNPq
-    print(f"\n🚀 CNPq - {len(dados['cnpq'])} CHAMADAS")
-    print("-" * 50)
-    for i, item in enumerate(dados['cnpq'], 1):
-        print(f"{i}. {item['titulo']}")
-        print(f"   📄 PDF: {item['pdfs_disponiveis'][0]['nome']}")
-        print(f"   🔗 Link: {item['pdfs_disponiveis'][0]['url']}")
-        print(f"   📝 Tipo: {item['tipo_link']}")
-        print(f"   💡 Instruções: {item['instrucoes']}")
-        if item.get('data_inscricao'):
-            print(f"   ⏰ Prazo: {item['data_inscricao']}")
-        print()
-
-def main():
-    """Função principal"""
-    print("🚀 INICIANDO REORGANIZAÇÃO COM SOLUÇÃO DEFINITIVA")
-    print("=" * 60)
+    def calcular_totais_finais(self):
+        """Calcula totais finais da SOLUÇÃO DEFINITIVA"""
+        print("\n📊 Calculando totais finais...")
+        
+        total_editais = (
+            len(self.dados_finais['fapemig']) +
+            len(self.dados_finais['cnpq']) +
+            len(self.dados_finais['ufmg'])
+        )
+        
+        total_pdfs = 0
+        for edital in self.dados_finais['fapemig']:
+            total_pdfs += len(edital.get('pdfs_disponiveis', []))
+        
+        for chamada in self.dados_finais['cnpq']:
+            total_pdfs += len(chamada.get('links_importantes', []))
+        
+        for edital in self.dados_finais['ufmg']:
+            if edital.get('link_pdf') or edital.get('link_alternativo'):
+                total_pdfs += 1
+        
+        self.dados_finais['total_editais'] = total_editais
+        self.dados_finais['total_pdfs'] = total_pdfs
+        
+        print(f"📊 TOTAL FINAL:")
+        print(f"   🏫 FAPEMIG: {len(self.dados_finais['fapemig'])} editais")
+        print(f"   🔬 CNPq: {len(self.dados_finais['cnpq'])} chamadas")
+        print(f"   🎓 UFMG: {len(self.dados_finais['ufmg'])} editais")
+        print(f"   📄 TOTAL: {total_editais} oportunidades, {total_pdfs} PDFs/links")
+        
+        return total_editais, total_pdfs
     
-    try:
-        # Reorganizar dados com SOLUÇÃO DEFINITIVA
-        dados = reorganizar_dados_mega_ultra_melhorado()
+    def salvar_dados_finais(self):
+        """Salva dados finais da SOLUÇÃO DEFINITIVA"""
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            nome_arquivo = f"dados_reorganizados_solucao_definitiva_{timestamp}.json"
+            
+            with open(nome_arquivo, 'w', encoding='utf-8') as f:
+                json.dump(self.dados_finais, f, ensure_ascii=False, indent=2)
+            
+            print(f"\n💾 Dados finais salvos em: {nome_arquivo}")
+            return nome_arquivo
+            
+        except Exception as e:
+            print(f"❌ Erro ao salvar dados finais: {e}")
+            return None
+    
+    def executar_reorganizacao_completa(self):
+        """Executa reorganização MEGA-ULTRA-MELHORADA completa"""
+        print("🚀 INICIANDO REORGANIZAÇÃO MEGA-ULTRA-MELHORADA")
+        print("=" * 60)
+        print(f"⏰ Início: {datetime.now().strftime('%H:%M:%S')}")
         
-        # Mostrar relatório completo
-        mostrar_relatorio_solucao_definitiva(dados)
+        # Encontrar arquivos
+        arquivo_fapemig, arquivo_cnpq, arquivo_ufmg = self.encontrar_arquivos_solucao_definitiva()
         
-        print("🎉 PROCESSO CONCLUÍDO COM SOLUÇÃO DEFINITIVA!")
-        print("📁 Arquivo gerado: dados_reorganizados_solucao_definitiva_*.json")
-        print("✅ TODOS os nomes e links dos PDFs incluídos!")
-        print("🔥 FAPEMIG com captura COMPLETA de editais!")
+        total_editais = 0
+        total_pdfs = 0
         
-    except Exception as e:
-        print(f"❌ Erro: {e}")
-        print("💡 Verifique se os arquivos dos scrapers existem na pasta atual")
+        # Processar FAPEMIG
+        if arquivo_fapemig:
+            editais_fapemig, pdfs_fapemig = self.processar_fapemig_solucao_definitiva(arquivo_fapemig)
+            total_editais += editais_fapemig
+            total_pdfs += pdfs_fapemig
+        
+        # Processar CNPq
+        if arquivo_cnpq:
+            chamadas_cnpq, links_cnpq = self.processar_cnpq_solucao_definitiva(arquivo_cnpq)
+            total_editais += chamadas_cnpq
+            total_pdfs += links_cnpq
+        
+        # Processar UFMG
+        if arquivo_ufmg:
+            editais_ufmg, pdfs_ufmg = self.processar_ufmg(arquivo_ufmg)
+            total_editais += editais_ufmg
+            total_pdfs += pdfs_ufmg
+        
+        # Calcular totais finais
+        self.calcular_totais_finais()
+        
+        # Salvar dados finais
+        arquivo_final = self.salvar_dados_finais()
+        
+        print(f"\n🎉 REORGANIZAÇÃO MEGA-ULTRA-MELHORADA CONCLUÍDA!")
+        print(f"📊 Total de oportunidades: {total_editais}")
+        print(f"📄 Total de PDFs/links: {total_pdfs}")
+        print(f"💾 Arquivo final: {arquivo_final}")
+        
+        return True
 
 if __name__ == "__main__":
-    main()
+    reorganizador = ReorganizadorDadosSolucaoDefinitiva()
+    reorganizador.executar_reorganizacao_completa()
