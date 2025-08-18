@@ -108,6 +108,18 @@ jobs:
           print(f'📄 CNPq: {len(dados_reorganizados[\"cnpq\"])} com links para PDFs')
           "
           
+      - name: 🔍 Diagnóstico de Email
+        env:
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_DESTINO: ${{ secrets.EMAIL_DESTINO }}
+        run: |
+          echo "🔍 EXECUTANDO DIAGNÓSTICO DE EMAIL..."
+          python diagnostico_email.py
+          
       - name: 📧 Enviar email com resultados
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}

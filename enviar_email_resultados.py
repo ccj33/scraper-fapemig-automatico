@@ -15,6 +15,53 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 import pytz
 
+def validar_configuracao_email():
+    """Valida se todas as variáveis de email estão configuradas"""
+    variaveis_obrigatorias = {
+        'SMTP_SERVER': os.getenv('SMTP_SERVER'),
+        'SMTP_PORT': os.getenv('SMTP_PORT'),
+        'EMAIL_USER': os.getenv('EMAIL_USER'),
+        'EMAIL_PASS': os.getenv('EMAIL_PASS'),
+        'EMAIL_FROM': os.getenv('EMAIL_FROM'),
+        'EMAIL_DESTINO': os.getenv('EMAIL_DESTINO')
+    }
+    
+    print("🔍 VALIDANDO CONFIGURAÇÃO DE EMAIL:")
+    print("=" * 40)
+    
+    configurado = True
+    for var, valor in variaveis_obrigatorias.items():
+        if valor and valor.strip():
+            # Mascarar senha
+            if 'PASS' in var:
+                valor_exibicao = '*' * len(valor)
+            else:
+                valor_exibicao = valor
+            print(f"✅ {var}: {valor_exibicao}")
+        else:
+            print(f"❌ {var}: NÃO CONFIGURADO")
+            configurado = False
+    
+    if not configurado:
+        print("\n⚠️  PROBLEMAS ENCONTRADOS:")
+        print("   - Algumas variáveis de ambiente não estão configuradas")
+        print("   - Verifique se os GitHub Secrets estão configurados corretamente")
+        print("   - Execute o teste local primeiro: python teste_email_local.py")
+        return False
+    
+    # Validações específicas
+    try:
+        porta = int(variaveis_obrigatorias['SMTP_PORT'])
+        if porta <= 0 or porta > 65535:
+            print(f"❌ SMTP_PORT inválido: {porta}")
+            return False
+    except (ValueError, TypeError):
+        print(f"❌ SMTP_PORT deve ser um número válido: {variaveis_obrigatorias['SMTP_PORT']}")
+        return False
+    
+    print("✅ Todas as variáveis estão configuradas corretamente!")
+    return True
+
 def carregar_dados_recentes():
     """Carrega os dados mais recentes dos scrapers"""
     dados = {
@@ -102,8 +149,13 @@ def enviar_email(destinatario, assunto, corpo):
         email_pass = os.getenv('EMAIL_PASS')
         email_from = os.getenv('EMAIL_FROM', email_user)
         
+        # Validações finais
         if not email_user or not email_pass:
             print("❌ Credenciais de email não configuradas!")
+            return False
+        
+        if not destinatario or not destinatario.strip():
+            print("❌ Destinatário não configurado!")
             return False
         
         # Criar mensagem
@@ -139,8 +191,17 @@ def main():
     print("📧 INICIANDO ENVIO DE EMAIL COM RESULTADOS")
     print("=" * 50)
     
+    # Validar configuração de email primeiro
+    if not validar_configuracao_email():
+        print("\n❌ CONFIGURAÇÃO DE EMAIL INVÁLIDA!")
+        print("🔧 Para resolver:")
+        print("   1. Configure os GitHub Secrets no repositório")
+        print("   2. Execute o teste local: python teste_email_local.py")
+        print("   3. Verifique se todos os secrets estão preenchidos")
+        return 1
+    
     # Carregar dados dos scrapers
-    print("📂 Carregando dados dos scrapers...")
+    print("\n📂 Carregando dados dos scrapers...")
     dados = carregar_dados_recentes()
     
     # Criar resumo para o email
