@@ -1,0 +1,57 @@
+{
+  "fapemig": [
+    {
+      "titulo": "CHAMADA FAPEMIG 011/2025 - DEEP TECH - INSERÇÃO NO MERCADO E TRAÇÃO COMERCIAL",
+      "numero": "011/2025",
+      "descricao": "Chamada para projetos de Deep Tech com foco em inserção no mercado",
+      "data_inclusao": "15/08/2025",
+      "prazo_final": "30/10/2025",
+      "link_pdf": "http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/",
+      "fonte": "FAPEMIG",
+      "data_coleta": "2025-08-17T22:38:19.518910"
+    },
+    {
+      "titulo": "CHAMADA 016/2024 - PARTICIPAÇÃO COLETIVA EM EVENTOS TÉCNICOS NO PAÍS - 3ª ENTRADA",
+      "numero": "016/2024",
+      "descricao": "Apoio para participação em eventos técnicos nacionais",
+      "data_inclusao": "10/08/2024",
+      "prazo_final": "25/09/2024",
+      "link_pdf": "http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/",
+      "fonte": "FAPEMIG",
+      "data_coleta": "2025-08-17T22:38:19.519060"
+    },
+    {
+      "titulo": "CHAMADA 005/2025 - ORGANIZAÇÃO DE EVENTOS DE CARÁTER TÉCNICO CIENTÍFICO - 2ª ENTRADA",
+      "numero": "005/2025",
+      "descricao": "Apoio para organização de eventos técnico-científicos",
+      "data_inclusao": "05/08/2025",
+      "prazo_final": "20/10/2025",
+      "link_pdf": "http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/",
+      "fonte": "FAPEMIG",
+      "data_coleta": "2025-08-17T22:38:19.519068"
+    },
+    {
+      "titulo": "PORTARIA FAPEMIG 021/2024 - CADASTRAMENTO DAS FUNDAÇÕES DE APOIO - FA",
+      "numero": "021/2024",
+      "descricao": "Cadastramento de fundações de apoio para projetos FAPEMIG",
+      "data_inclusao": "01/08/2024",
+      "prazo_final": "31/12/2024",
+      "link_pdf": "http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/",
+      "fonte": "FAPEMIG",
+      "data_coleta": "2025-08-17T22:38:19.519073"
+    },
+    {
+      "titulo": "PORTARIA FAPEMIG 020/2024 - CADASTRAMENTO DE INSTITUIÇÕES",
+      "numero": "020/2024",
+      "descricao": "Cadastramento de instituições para projetos FAPEMIG",
+      "data_inclusao": "01/08/2024",
+      "prazo_final": "31/12/2024",
+      "link_pdf": "http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/",
+      "fonte": "FAPEMIG",
+      "data_coleta": "2025-08-17T22:38:19.519077"
+    }
+  ],
+  "total_chamadas": 5,
+  "timestamp": "2025-08-17T22:38:19.540016",
+  "metodo": "Dados Funcionais Simulados"
+}

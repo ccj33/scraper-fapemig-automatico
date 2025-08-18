@@ -1,0 +1,136 @@
+{
+  "cnpq": [
+    {
+      "titulo": "t-striped list-chamadas\"> CHAMADA ERC- CNPQ - 2025 Nº 13/2025 A presente chamada pública tem por objetivo selecionar propostas para apoio financeiro",
+      "numero": "13/2025",
+      "prazo_final": null,
+      "link_pdf": "http://memoria2.cnpq.br/web/guest/chamadas-publicas",
+      "fonte": "CNPq",
+      "data_coleta": "2025-08-17T23:04:19.542491"
+    },
+    {
+      "titulo": "CHAMADA PÚBLICA CNPq Nº 12/2025 - PROGRAMA INSTITUCIONAL DE BOLSAS DE PÓS-GRADUAÇÃO (PIBPG) - CICLO 2026 A presente ch",
+      "numero": "12/2025",
+      "prazo_final": null,
+      "link_pdf": "http://memoria2.cnpq.br/web/guest/chamadas-publicas",
+      "fonte": "CNPq",
+      "data_coleta": "2025-08-17T23:04:19.542942"
+    },
+    {
+      "titulo": "Chamada CNPq/SETEC/MCTI N° 06/2025 - Apoio a Eventos de Promoção do Empreendedorismo e da Inovação no Brasil Apoiar a rea",
+      "numero": "06/2025",
+      "prazo_final": null,
+      "link_pdf": "http://memoria2.cnpq.br/web/guest/chamadas-publicas",
+      "fonte": "CNPq",
+      "data_coleta": "2025-08-17T23:04:19.543307"
+    },
+    {
+      "titulo": "CHAMADA PÚBLICA MCTI/CNPq/CSIC Nº 9/2025 Apoiar até 4 projetos conjuntos de pesquisa entre grupos brasileiros e espanhóis, que",
+      "numero": "9/2025",
+      "prazo_final": null,
+      "link_pdf": "http://memoria2.cnpq.br/web/guest/chamadas-publicas",
+      "fonte": "CNPq",
+      "data_coleta": "2025-08-17T23:04:19.543617"
+    }
+  ],
+  "fapemig": [
+    {
+      "titulo": "=\"collapse\"> CHAMADA FAPEMIG 011/2025 - DEEP TECH - INSERÇÃO NO MERCADO E TRAÇÃO COMERCIAL<s",
+      "numero": "011/2025",
+      "prazo_final": null,
+      "link_pdf": "http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/",
+      "fonte": "FAPEMIG",
+      "data_coleta": "2025-08-17T23:04:19.931472"
+    },
+    {
+      "titulo": "=\"collapse\"> Chamada 016/2024 - Participação Coletiva em Eventos Técnicos no País -",
+      "numero": "016/2024",
+      "prazo_final": null,
+      "link_pdf": "http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/",
+      "fonte": "FAPEMIG",
+      "data_coleta": "2025-08-17T23:04:19.931848"
+    },
+    {
+      "titulo": "=\"collapse\"> CHAMADA 005/2025 - ORGANIZAÇÃO DE EVENTOS DE CARÁTER TÉCNICO CIENTÍFICO",
+      "numero": "005/2025",
+      "prazo_final": null,
+      "link_pdf": "http://www.fapemig.br/pt/chamadas_abertas_oportunidades_fapemig/",
+      "fonte": "FAPEMIG",
+      "data_coleta": "2025-08-17T23:04:19.932100"
+    }
+  ],
+  "ufmg": [
+    {
+      "titulo": "le-3\"> Edital PROEX nº 08/2025 &#8211; Programa de Apoio Integrado a Eventos &#8211; PAIE Aber",
+      "numero": "2025",
+      "prazo_final": null,
+      "link_pdf": "https://www.ufmg.br/prograd/editais/",
+      "fonte": "UFMG",
+      "data_coleta": "2025-08-17T23:04:20.317513"
+    },
+    {
+      "titulo": "le-3\"> Edital Nº 1874/2025 &#8211; Seleção ampliada de estudantes para o Programa de Educação pelo",
+      "numero": "1874",
+      "prazo_final": null,
+      "link_pdf": "https://www.ufmg.br/prograd/editais/",
+      "fonte": "UFMG",
+      "data_coleta": "2025-08-17T23:04:20.317601"
+    },
+    {
+      "titulo": "Edital Nº 1751/2025 – Programa de auxílio financeiro para Mobilidade Acadêmica Nacional e Intercampi 2025/2",
+      "numero": "1751",
+      "prazo_final": null,
+      "link_pdf": "https://www.ufmg.br/prograd/editais/",
+      "fonte": "UFMG",
+      "data_coleta": "2025-08-17T23:04:20.317748"
+    },
+    {
+      "titulo": "le-3\"> Edital Nº 1470/2025 &#8211; Eleição de representantes dos coordenadores dos colegiados dos cur",
+      "numero": "1470",
+      "prazo_final": null,
+      "link_pdf": "https://www.ufmg.br/prograd/editais/",
+      "fonte": "UFMG",
+      "data_coleta": "2025-08-17T23:04:20.317811"
+    },
+    {
+      "titulo": "le-3\"> Edital PROEX nº 08/2025 &#8211; Programa de Apoio Integrado a Eventos &#8211; PAIE Aber",
+      "numero": "08/2025",
+      "prazo_final": null,
+      "link_pdf": "https://www.ufmg.br/prograd/editais/",
+      "fonte": "UFMG",
+      "data_coleta": "2025-08-17T23:04:20.325021"
+    },
+    {
+      "titulo": "le-3\"> Edital Nº 1874/2025 &#8211; Seleção ampliada de estudantes para o Programa de Educação pelo Trabalho em Saúde &#8211; P",
+      "numero": "74/2025",
+      "prazo_final": null,
+      "link_pdf": "https://www.ufmg.br/prograd/editais/",
+      "fonte": "UFMG",
+      "data_coleta": "2025-08-17T23:04:20.325103"
+    },
+    {
+      "titulo": "Edital Nº 1751/2025 – Programa de auxílio financeiro para Mobilidade Acadêmica Nacional e Intercampi 2025/2",
+      "numero": "51/2025",
+      "prazo_final": null,
+      "link_pdf": "https://www.ufmg.br/prograd/editais/",
+      "fonte": "UFMG",
+      "data_coleta": "2025-08-17T23:04:20.325183"
+    },
+    {
+      "titulo": "le-3\"> Edital Nº 1470/2025 &#8211; Eleição de representantes dos coordenadores dos colegiados dos cursos de licenciatura para",
+      "numero": "70/2025",
+      "prazo_final": null,
+      "link_pdf": "https://www.ufmg.br/prograd/editais/",
+      "fonte": "UFMG",
+      "data_coleta": "2025-08-17T23:04:20.325256"
+    },
+    {
+      "titulo": "i> Edital Nº 94/2025 &#8211; Programa de auxílio financeiro para Mobilidade Acadêmica Nacional e Intercampi",
+      "numero": "94/2025",
+      "prazo_final": null,
+      "link_pdf": "https://www.ufmg.br/prograd/editais/",
+      "fonte": "UFMG",
+      "data_coleta": "2025-08-17T23:04:20.325328"
+    }
+  ]
+}
